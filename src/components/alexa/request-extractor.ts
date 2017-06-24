@@ -11,8 +11,9 @@ import { amazonToGenericIntent as dictionary } from "./intent-dict";
 export class RequestExtractor implements unifierInterfaces.RequestConversationExtractor {
   public component: Component;
   private configuration: Configuration;
+  verifyAlexaProxy = verifyAlexa;
 
-  constructor(@inject("meta:component//platform:alexa") componentMeta: Component) {
+  constructor(@inject("meta:component//alexa") componentMeta: Component) {
     this.component = componentMeta;
     this.configuration = componentMeta.configuration as Configuration;
   }
@@ -20,7 +21,7 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
   fits(context: rootInterfaces.RequestContext): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       if (this.fitsInternal(context)) {
-        verifyAlexa(context.headers["signaturecertchainurl"], context.headers["signature"], JSON.stringify(context.body), function(error) {
+        this.verifyAlexaProxy(context.headers["signaturecertchainurl"], context.headers["signature"], JSON.stringify(context.body), function(error) {
           if (error) {
             log("Incoming request matched for configured route and applicationID, but could not be verified correctly with alexa-verifier module");
             resolve(false);

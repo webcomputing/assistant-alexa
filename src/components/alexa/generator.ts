@@ -8,7 +8,7 @@ import { genericIntentToAmazon } from "./intent-dict";
 
 @injectable()
 export class Generator implements unifierInterfaces.PlatformGenerator {
-  @inject("meta:component//platform:alexa")
+  @inject("meta:component//alexa")
   private component: Component;
 
   execute(language: string, buildDir: string, intentConfigurations: unifierInterfaces.GenerateIntentConfiguration[], parameterMapping: unifierInterfaces.GeneratorEntityMapping) {
