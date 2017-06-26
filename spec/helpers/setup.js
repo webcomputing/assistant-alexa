@@ -2,6 +2,7 @@ require("reflect-metadata");
 let assistantJsCore = require("assistant-source");
 let ownDescriptor = require("../../src/components/alexa/descriptor").descriptor;
 let configuration = require("../support/mocks/configuration").configuration;
+let mainState = require("../support/mocks/state").MainState;
 
 
 beforeEach(function() {
@@ -12,7 +13,7 @@ beforeEach(function() {
   this.specHelper.setup.configureComponent("alexa", configuration);
 
   // Prepare all other steps
-  this.specHelper.prepare();
+  this.specHelper.prepare([mainState]);
 
   this.assistantJs = this.specHelper.setup;
   this.container = this.assistantJs.container;

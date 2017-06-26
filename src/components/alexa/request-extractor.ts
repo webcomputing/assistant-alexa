@@ -4,7 +4,7 @@ import * as verifyAlexa from "alexa-verifier";
 import { log } from "../../global";
 import { injectable, inject } from "inversify";
 import { Component } from "ioc-container";
-import { Configuration, askInterfaces, identifiers } from "./interfaces";
+import { Configuration, askInterfaces, ExtractionInterface } from "./interfaces";
 import { amazonToGenericIntent as dictionary } from "./intent-dict";
 
 @injectable()
@@ -37,10 +37,7 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
     });
   }
 
-  extract(context: rootInterfaces.RequestContext): Promise<
-      unifierInterfaces.MinimalRequestExtraction & 
-      unifierInterfaces.OptionalExtractions.OAuthExtraction
-  >{
+  extract(context: rootInterfaces.RequestContext): Promise<ExtractionInterface>{
     return new Promise((resolve, reject) => {
       let resolvedContext = {
         sessionID: this.getSessionID(context),

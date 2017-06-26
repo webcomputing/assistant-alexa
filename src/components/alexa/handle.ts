@@ -1,17 +1,10 @@
 import { inject, injectable } from "inversify";
 import { ExecutableExtension } from "ioc-container";
 import { unifierInterfaces, rootInterfaces } from "assistant-source"
-import { askInterfaces } from "./interfaces";
+import { askInterfaces, HandlerInterface } from "./interfaces";
 
 @injectable()
-export class AlexaHandle implements 
-
-  /* Available Features */
-  unifierInterfaces.MinimalResponseHandler, 
-  unifierInterfaces.OptionalHandlerFeatures.AuthenticationHandler,
-  unifierInterfaces.OptionalHandlerFeatures.SSMLHandler 
-
-{
+export class AlexaHandle implements HandlerInterface {
   endSession: boolean;
   voiceMessage: string;
 

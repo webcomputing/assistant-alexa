@@ -2,7 +2,7 @@ import { ComponentDescriptor } from "ioc-container";
 import { RequestExtractor } from "./request-extractor";
 import { AlexaHandle } from "./handle";
 import { Generator } from "./generator";
-import { OptionalConfiguration, identifiers } from "./interfaces";
+import { OptionalConfiguration } from "./interfaces";
 
 import { unifierInterfaces } from "assistant-source";
 
