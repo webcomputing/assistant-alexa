@@ -1,52 +1,28 @@
 import { inject, injectable } from "inversify";
 import { ExecutableExtension } from "ioc-container";
-import { unifierInterfaces, rootInterfaces } from "assistant-source"
+import { unifierInterfaces, rootInterfaces, AbstractResponseHandler } from "assistant-source"
 import { askInterfaces, HandlerInterface } from "./interfaces";
 
 @injectable()
-export class AlexaHandle implements HandlerInterface {
-  endSession: boolean;
-  voiceMessage: string;
-
-  responseCallback: rootInterfaces.ResponseCallback;
-  endSessionExecuter: Function;
-
+export class AlexaHandle extends AbstractResponseHandler implements HandlerInterface {
   card: askInterfaces.Card | null = null;
 
   forceAuthenticated: boolean = false;
   isSSML: boolean = false;
-
-  private _isActive: boolean = true;
   
   constructor(
     @inject("core:root:current-request-context") extraction: rootInterfaces.RequestContext,
     @inject("core:unifier:end-session-callbacks-executer") endSessionExecuter: Function
   ) {
-    this.responseCallback = extraction.responseCallback;
-    this.endSessionExecuter = endSessionExecuter;
-  }
-
-  get isActive() {
-    return this._isActive;
-  }
-
-  sendResponse() {
-    this.failIfInactive();
-
-    this.responseCallback(JSON.stringify(this.getBody()), this.getHeaders());
-    if (this.endSession) {
-      this.endSessionExecuter();
-    }
-
-    this._isActive = false;
-  }
-
-  getHeaders() {
-    return { "Content-Type": "application/json" };
+    super(extraction, endSessionExecuter)
   }
 
   getBody(): askInterfaces.ResponseBody {
     let response = this.getBaseBody();
+
+    if (this.forceAuthenticated) {
+      this.addLinkAccountCard();
+    }
 
     if (this.voiceMessage !== "") {
       response.response.outputSpeech = this.getSpeechBody();
@@ -55,7 +31,7 @@ export class AlexaHandle implements HandlerInterface {
     if (this.card !== null) {
       response.response.card = this.card;
     }
-
+    
     return response;
   }
 
@@ -84,11 +60,5 @@ export class AlexaHandle implements HandlerInterface {
         text: this.voiceMessage
       }
     };
-  }
-
-  private failIfInactive() {
-    if (!this.isActive) {
-      throw Error("This handle is already inactive, an response was already sent. You cannot send text to alexa multiple times in one request.");
-    }
   }
 }

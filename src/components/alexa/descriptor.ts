@@ -1,7 +1,7 @@
 import { ComponentDescriptor } from "ioc-container";
 import { RequestExtractor } from "./request-extractor";
 import { AlexaHandle } from "./handle";
-import { Generator } from "./generator";
+import { AlexaGenerator } from "./generator";
 import { OptionalConfiguration } from "./interfaces";
 
 import { unifierInterfaces } from "assistant-source";
@@ -22,7 +22,7 @@ export let descriptor: ComponentDescriptor = {
         .bindExtension<unifierInterfaces.RequestConversationExtractor>(lookupService.lookup("core:unifier").getInterface("requestProcessor"))
         .to(RequestExtractor);
 
-      bindService.bindExtension<unifierInterfaces.PlatformGenerator>(lookupService.lookup("core:unifier").getInterface("platformGenerator")).to(Generator);
+      bindService.bindExtension<unifierInterfaces.PlatformGenerator>(lookupService.lookup("core:unifier").getInterface("platformGenerator")).to(AlexaGenerator);
     },
     request: (bindService) => {
       bindService.bindGlobalService("current-response-handler").to(AlexaHandle);

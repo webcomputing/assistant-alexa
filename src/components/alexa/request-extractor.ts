@@ -95,7 +95,7 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
   /* Returns GenericIntent if request is a GenericIntent, or null, if not */
   private getGenericIntent(context: rootInterfaces.RequestContext): unifierInterfaces.GenericIntent | null {
     switch (context.body.request.type) {
-      case askInterfaces.RequestType.InvokeRequest:
+      case askInterfaces.RequestType.LaunchRequest:
         return unifierInterfaces.GenericIntent.Invoke;
       case askInterfaces.RequestType.SessionEndedRequest:
         return unifierInterfaces.GenericIntent.EndSession;

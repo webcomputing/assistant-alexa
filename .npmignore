@@ -1,8 +1,7 @@
 js
 node_modules
 src
-spec/helpers
-spec/components
+spec
 jasmine.json
 gulpfile.js
 tsconfig.json

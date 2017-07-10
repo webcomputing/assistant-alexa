@@ -1,8 +1,8 @@
 import { Component } from "ioc-container";
 import { SpecSetup, unifierInterfaces, rootInterfaces } from "assistant-source";
 
-import { ExtractionInterface, HandlerInterface } from "../src/components/alexa/interfaces";
-import { AlexaHandle } from "../src/components/alexa/handle";
+import { ExtractionInterface, HandlerInterface } from "./components/alexa/interfaces";
+import { AlexaHandle } from "./components/alexa/handle";
 
 export class SpecHelper implements unifierInterfaces.PlatformSpecHelper {
   specSetup: SpecSetup

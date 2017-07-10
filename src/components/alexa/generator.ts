@@ -7,7 +7,7 @@ import { Configuration } from "./interfaces";
 import { genericIntentToAmazon } from "./intent-dict";
 
 @injectable()
-export class Generator implements unifierInterfaces.PlatformGenerator {
+export class AlexaGenerator implements unifierInterfaces.PlatformGenerator {
   @inject("meta:component//alexa")
   private component: Component;
 

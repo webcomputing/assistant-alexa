@@ -89,15 +89,15 @@ export interface AlexaRequest {
 }
 
 /** String literal with possible values. Used in place of an enum to allow string type. */
-export type RequestType = 'InvokeRequest' | 'IntentRequest' | 'SessionEndedRequest';
+export type RequestType = 'LaunchRequest' | 'IntentRequest' | 'SessionEndedRequest';
 export const RequestType = {
-    InvokeRequest: 'InvokeRequest' as RequestType,
+    LaunchRequest: 'LaunchRequest' as RequestType,
     IntentRequest: 'IntentRequest' as RequestType,
     SessionEndedRequest: 'SessionEndedRequest' as RequestType
 };
 
 /** Represents that a user made a request to an Alexa skill, but did not provide a specific intent. */
-export interface InvokeRequest extends AlexaRequest {
+export interface LaunchRequest extends AlexaRequest {
     // Adds nothing
 }
 
