@@ -3,7 +3,7 @@ import * as verifyAlexa from "alexa-verifier";
 
 import { log } from "../../global";
 import { injectable, inject } from "inversify";
-import { Component } from "ioc-container";
+import { Component } from "inversify-components";
 import { Configuration, askInterfaces, ExtractionInterface } from "./interfaces";
 import { amazonToGenericIntent as dictionary } from "./intent-dict";
 

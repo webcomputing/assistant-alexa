@@ -1,4 +1,4 @@
-import { ComponentDescriptor } from "ioc-container";
+import { ComponentDescriptor } from "inversify-components";
 import { RequestExtractor } from "./request-extractor";
 import { AlexaHandle } from "./handle";
 import { AlexaGenerator } from "./generator";

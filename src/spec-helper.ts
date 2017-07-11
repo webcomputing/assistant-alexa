@@ -1,4 +1,4 @@
-import { Component } from "ioc-container";
+import { Component } from "inversify-components";
 import { SpecSetup, unifierInterfaces, rootInterfaces } from "assistant-source";
 
 import { ExtractionInterface, HandlerInterface } from "./components/alexa/interfaces";

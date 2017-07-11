@@ -1,5 +1,5 @@
 import { inject, injectable } from "inversify";
-import { ExecutableExtension } from "ioc-container";
+import { ExecutableExtension } from "inversify-components";
 import { unifierInterfaces, rootInterfaces, AbstractResponseHandler } from "assistant-source"
 import { askInterfaces, HandlerInterface } from "./interfaces";
 
