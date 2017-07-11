@@ -23,7 +23,7 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
       if (this.fitsInternal(context)) {
         this.verifyAlexaProxy(context.headers["signaturecertchainurl"], context.headers["signature"], JSON.stringify(context.body), function(error) {
           if (error) {
-            log("Incoming request matched for configured route and applicationID, but could not be verified correctly with alexa-verifier module");
+            log("Incoming request matched for configured route and applicationID, but could not be verified correctly with alexa-verifier module. Given error = ", error);
             resolve(false);
           } else {
             log("Incoming request matched for alexa extractor");
