@@ -3,6 +3,9 @@ import { unifierInterfaces } from "assistant-source";
 export interface OptionalConfiguration {
   route?: string;
   parameters?: { [name: string]: string };
+
+  /** If set to false, we will not use alexa-verifier to test valid requests. */
+  useVerifier?: boolean;
 };
 
 export interface Configuration extends OptionalConfiguration {

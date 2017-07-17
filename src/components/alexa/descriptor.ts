@@ -10,7 +10,8 @@ export const defaultConfiguration: OptionalConfiguration = {
   route: "/alexa",
   parameters: {
     number: "AMAZON.NUMBER"
-  }
+  },
+  useVerifier: true
 };
 
 export let descriptor: ComponentDescriptor = {

@@ -11,11 +11,12 @@ import { amazonToGenericIntent as dictionary } from "./intent-dict";
 export class RequestExtractor implements unifierInterfaces.RequestConversationExtractor {
   public component: Component;
   private configuration: Configuration;
-  verifyAlexaProxy = verifyAlexa;
+  verifyAlexaProxy: any;
 
   constructor(@inject("meta:component//alexa") componentMeta: Component) {
     this.component = componentMeta;
     this.configuration = componentMeta.configuration as Configuration;
+    this.verifyAlexaProxy = this.resolveVerifier();
   }
 
   fits(context: rootInterfaces.RequestContext): Promise<boolean> {
@@ -51,6 +52,15 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
       log("Resolved context: %o", resolvedContext);
       resolve(resolvedContext);
     });
+  }
+
+  resolveVerifier() {
+    if (this.configuration.useVerifier === false) {
+      log("Using proxy verifier instead of alexa-verify. Hope you know what you are doing.");
+      return (chainurl, signature, body, callback: (error) => any) => { callback(false) };
+    } else {
+      return verifyAlexa
+    };
   }
 
   private fitsInternal(context: rootInterfaces.RequestContext) {
