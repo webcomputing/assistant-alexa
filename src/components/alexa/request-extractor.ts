@@ -84,7 +84,7 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
       if (typeof(request.intent.slots) !== "undefined") {
         let result = {};
         Object.keys(request.intent.slots).forEach(slotName => {
-          if (typeof(request.intent.slots[slotName].value) !== "undefined" && request.intent.slots[slotName].value !== "?")
+          if (typeof(request.intent.slots[slotName].value) !== "undefined" && request.intent.slots[slotName].value !== "?" && request.intent.slots[slotName].value !== null && request.intent.slots[slotName].value !== "null")
             result[slotName] = request.intent.slots[slotName].value;
         });
         return result;
