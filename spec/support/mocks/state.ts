@@ -9,6 +9,14 @@ export class MainState implements stateMachineInterfaces.State {
     this.responseFactory = factory;
   }
 
+  imageCardIntent() {
+    this.responseFactory.createCardResponse().setTitle("My title").setBody("My body").setImage("My image");
+  }
+
+  standardCardIntent() {
+    this.responseFactory.createCardResponse().setTitle("My title").setBody("My body");
+  }
+
   unhandledIntent() {
     this.responseFactory.createSimpleVoiceResponse().endSessionWith("Hello from alexa!");
   }

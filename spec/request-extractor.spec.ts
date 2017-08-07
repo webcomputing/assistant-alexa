@@ -13,10 +13,6 @@ describe("RequestExtractor", function() {
 
   describe("fits", function() {
     describe("with verifyAlexa proxyfied", function() {
-      beforeEach(function() {
-        spyOn(extractor, "verifyAlexaProxy").and.returnValue(true);
-      });
-
       describe("when a valid (but signature missing) amazon request is given", function() {
         it("returns true", function() {
           return extractor.fits(context).then(result => expect(result).toBeTruthy());
@@ -25,6 +21,11 @@ describe("RequestExtractor", function() {
     });
 
     describe("without verifyAlexa proxyfied", function() {
+      beforeEach(function() {
+        (extractor as any).configuration.useVerifier = true;
+        extractor.verifyAlexaProxy = extractor.resolveVerifier();
+      });
+
       describe("when a valid (but signature missing) amazon request is given", function() {
         it("returns true", function() {
           return extractor.fits(context).then(result => expect(result).toBeFalsy());
