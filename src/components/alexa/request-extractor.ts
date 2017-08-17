@@ -40,13 +40,14 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
 
   extract(context: AlexaRequestContext): Promise<ExtractionInterface>{
     return new Promise((resolve, reject) => {
+      let user = this.getUser(context);
       let resolvedContext: ExtractionInterface = {
         sessionID: this.getSessionID(context),
         intent: this.getIntent(context),
         entities: this.getEntities(context),
         language: this.getLanguage(context),
         component: this.component,
-        oAuthToken: this.getUser(context),
+        oAuthToken: typeof user === "undefined" ? null : user,
         temporalAuthToken: this.getTemporalAuth(context)
       };
 
@@ -103,7 +104,7 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
     return context.body.request.locale.split("-")[0]; // returns "en", "de", ...
   }
 
-  private getUser(context: AlexaRequestContext) {
+  private getUser(context: AlexaRequestContext): string | undefined {
     return context.body.session.user.accessToken
   }
 
