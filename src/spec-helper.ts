@@ -17,7 +17,8 @@ export class SpecHelper implements unifierInterfaces.PlatformSpecHelper {
       intent: intent,
       sessionID: "alexa-mock-session-id",
       language: "en",
-      oAuthToken: "alexa-mock-oauth-token"
+      oAuthToken: "alexa-mock-oauth-token",
+      temporalAuthToken: "alexa-mock-temp-auth-token"
     }, additionalExtractions);
 
     let context: rootInterfaces.RequestContext = Object.assign({

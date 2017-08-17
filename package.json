@@ -1,6 +1,6 @@
 {
   "name": "assistant-alexa",
-  "version": "0.1.3",
+  "version": "0.1.5",
   "description": "Brings Amazon Alexa to assistant.js",
   "scripts": {
     "test": "jasmine-ts spec/**/*.spec.ts"

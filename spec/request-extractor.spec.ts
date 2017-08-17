@@ -67,7 +67,8 @@ describe("RequestExtractor", function() {
         entities: {"entity1": "entityvalue"},
         language: "en",
         component: extractor.component,
-        oAuthToken: "mockOAuthToken"
+        oAuthToken: "mockOAuthToken",
+        temporalAuthToken: "temporalUserId"
       });
     });
   });

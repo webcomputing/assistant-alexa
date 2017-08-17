@@ -4,7 +4,7 @@ import * as verifyAlexa from "alexa-verifier";
 import { log } from "../../global";
 import { injectable, inject } from "inversify";
 import { Component } from "inversify-components";
-import { Configuration, askInterfaces, ExtractionInterface } from "./interfaces";
+import { Configuration, askInterfaces, ExtractionInterface, AlexaRequestContext } from "./interfaces";
 import { amazonToGenericIntent as dictionary } from "./intent-dict";
 
 @injectable()
@@ -19,7 +19,7 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
     this.verifyAlexaProxy = this.resolveVerifier();
   }
 
-  fits(context: rootInterfaces.RequestContext): Promise<boolean> {
+  fits(context: AlexaRequestContext): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       if (this.fitsInternal(context)) {
         this.verifyAlexaProxy(context.headers["signaturecertchainurl"], context.headers["signature"], JSON.stringify(context.body), function(error) {
@@ -38,20 +38,25 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
     });
   }
 
-  extract(context: rootInterfaces.RequestContext): Promise<ExtractionInterface>{
+  extract(context: AlexaRequestContext): Promise<ExtractionInterface>{
     return new Promise((resolve, reject) => {
-      let resolvedContext = {
+      let resolvedContext: ExtractionInterface = {
         sessionID: this.getSessionID(context),
         intent: this.getIntent(context),
         entities: this.getEntities(context),
         language: this.getLanguage(context),
         component: this.component,
-        oAuthToken: this.getUser(context)
+        oAuthToken: this.getUser(context),
+        temporalAuthToken: this.getTemporalAuth(context)
       };
 
       log("Resolved context: %o", resolvedContext);
       resolve(resolvedContext);
     });
+  }
+
+  getTemporalAuth(context: AlexaRequestContext): string {
+    return context.body.session.user.userId;
   }
 
   resolveVerifier() {
@@ -63,22 +68,22 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
     };
   }
 
-  private fitsInternal(context: rootInterfaces.RequestContext) {
+  private fitsInternal(context: AlexaRequestContext) {
     return context.path === this.configuration.route && context.body.session.application.applicationId === this.configuration.applicationID
   }
 
-  private getSessionID(context: rootInterfaces.RequestContext) {
+  private getSessionID(context: AlexaRequestContext) {
     return "alexa-" + context.body.session.sessionId;
   }
 
-  private getIntent(context: rootInterfaces.RequestContext): unifierInterfaces.intent {
+  private getIntent(context: AlexaRequestContext): unifierInterfaces.intent {
     let genericIntent = this.getGenericIntent(context);
     if (genericIntent !== null) return genericIntent;
 
     return (context.body.request as askInterfaces.IntentRequest).intent.name;
   }
 
-  private getEntities(context: rootInterfaces.RequestContext) {
+  private getEntities(context: AlexaRequestContext) {
     let request = context.body.request as askInterfaces.IntentRequest;
     if (typeof(request.intent) !== "undefined") {
       if (typeof(request.intent.slots) !== "undefined") {
@@ -94,16 +99,16 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
     return {};
   }
 
-  private getLanguage(context: rootInterfaces.RequestContext): string {
+  private getLanguage(context: AlexaRequestContext): string {
     return context.body.request.locale.split("-")[0]; // returns "en", "de", ...
   }
 
-  private getUser(context: rootInterfaces.RequestContext) {
+  private getUser(context: AlexaRequestContext) {
     return context.body.session.user.accessToken
   }
 
   /* Returns GenericIntent if request is a GenericIntent, or null, if not */
-  private getGenericIntent(context: rootInterfaces.RequestContext): unifierInterfaces.GenericIntent | null {
+  private getGenericIntent(context: AlexaRequestContext): unifierInterfaces.GenericIntent | null {
     switch (context.body.request.type) {
       case askInterfaces.RequestType.LaunchRequest:
         return unifierInterfaces.GenericIntent.Invoke;

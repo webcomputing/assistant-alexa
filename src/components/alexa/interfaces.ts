@@ -1,4 +1,5 @@
-import { unifierInterfaces } from "assistant-source";
+import { unifierInterfaces, rootInterfaces } from "assistant-source";
+import * as askInterfaces from "./skill-kit-interfaces";
 
 export interface OptionalConfiguration {
   route?: string;
@@ -14,6 +15,7 @@ export interface Configuration extends OptionalConfiguration {
 
 export interface ExtractionInterface extends 
   unifierInterfaces.MinimalRequestExtraction, 
+  unifierInterfaces.OptionalExtractions.TemporalAuthExtraction,
   unifierInterfaces.OptionalExtractions.OAuthExtraction {}
 export interface HandlerInterface extends 
   unifierInterfaces.MinimalResponseHandler, 
@@ -22,5 +24,8 @@ export interface HandlerInterface extends
   unifierInterfaces.OptionalHandlerFeatures.AuthenticationHandler,
   unifierInterfaces.OptionalHandlerFeatures.SSMLHandler {}; 
 
-import * as askInterfaces from "./skill-kit-interfaces";
+export interface AlexaRequestContext extends rootInterfaces.RequestContext {
+  body: askInterfaces.RequestBody;
+}
+
 export { askInterfaces };
