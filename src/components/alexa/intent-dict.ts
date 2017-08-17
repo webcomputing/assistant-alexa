@@ -13,7 +13,8 @@ export const amazonToGenericIntent: {[name: string]: unifierInterfaces.GenericIn
   "AMAZON.YesIntent": unifierInterfaces.GenericIntent.Yes,
   "AMAZON.NoIntent": unifierInterfaces.GenericIntent.No,
   "AMAZON.HelpIntent": unifierInterfaces.GenericIntent.Help,
-  "AMAZON.CancelIntent": unifierInterfaces.GenericIntent.Cancel
+  "AMAZON.CancelIntent": unifierInterfaces.GenericIntent.Cancel,
+  "AMAZON.StopIntent": unifierInterfaces.GenericIntent.Stop
 };
 
 export const genericIntentToAmazon: {[intent: number]: string} = swap(amazonToGenericIntent);
