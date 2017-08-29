@@ -14,7 +14,7 @@ export class AlexaHandle extends AbstractResponseHandler implements HandlerInter
   
   constructor(
     @inject("core:root:current-request-context") extraction: rootInterfaces.RequestContext,
-    @inject("core:unifier:current-kill-session-promise") killSession: Function
+    @inject("core:unifier:current-kill-session-promise") killSession: () => Promise<void>
   ) {
     super(extraction, killSession)
   }

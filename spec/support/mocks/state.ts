@@ -17,7 +17,11 @@ export class MainState implements stateMachineInterfaces.State {
     this.responseFactory.createCardResponse().setTitle("My title").setBody("My body");
   }
 
-  unhandledIntent() {
+  unhandledGenericIntent() {
     this.responseFactory.createSimpleVoiceResponse().endSessionWith("Hello from alexa!");
+  }
+
+  unansweredGenericIntent() {
+    this.responseFactory.createAndSendEmptyResponse();
   }
 }

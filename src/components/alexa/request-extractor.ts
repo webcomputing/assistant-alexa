@@ -114,7 +114,7 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
       case askInterfaces.RequestType.LaunchRequest:
         return unifierInterfaces.GenericIntent.Invoke;
       case askInterfaces.RequestType.SessionEndedRequest:
-        return unifierInterfaces.GenericIntent.EndSession;
+        return unifierInterfaces.GenericIntent.Unanswered;
       default:
         let intentRequest = context.body.request as askInterfaces.IntentRequest;
         return RequestExtractor.makeIntentStringToGenericIntent(intentRequest.intent.name);
