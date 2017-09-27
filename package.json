@@ -1,13 +1,13 @@
 {
   "name": "assistant-alexa",
   "version": "0.1.9",
-  "description": "Brings Amazon Alexa to assistant.js",
+  "description": "Enables Amazon Alexa support in AssistantJS",
   "scripts": {
     "test": "jasmine-ts spec/**/*.spec.ts"
   },
   "keywords": [
     "alexa",
-    "assistant.js"
+    "AssistantJS"
   ],
   "peerDependencies": {
     "assistant-source": "^0.1.0"
@@ -25,8 +25,10 @@
     "debug": "^2.6.8",
     "typescript": "2.3.4"
   },
-  "author": "Antonius Ostermann",
-  "license": "ISC",
+  "homepage": "http://www.assistantjs.org",
+  "bugs": "https://github.com/webcomputing/assistant-alexa/issues",
+  "author": "Antonius Ostermann <ostermann.antonius@gmail.com> (http://www.antonius-ostermann.de)",
+  "license": "SEE LICENSE IN <LICENSE>",
   "dependencies": {
     "alexa-verifier": "^0.3.6"
   },
@@ -34,5 +36,9 @@
   "typings": "./dts/assistant-alexa.d.ts",
   "publishConfig": {
     "registry": "http://sinopia.verstehe.local:4873"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webcomputing/assistant-alexa"
   }
 }
