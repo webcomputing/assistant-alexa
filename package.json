@@ -1,6 +1,6 @@
 {
   "name": "assistant-alexa",
-  "version": "0.1.9",
+  "version": "0.1.0",
   "description": "Enables Amazon Alexa support in AssistantJS",
   "scripts": {
     "test": "jasmine-ts spec/**/*.spec.ts"
@@ -34,9 +34,6 @@
   },
   "main": "./lib/assistant-alexa.js",
   "typings": "./dts/assistant-alexa.d.ts",
-  "publishConfig": {
-    "registry": "http://sinopia.verstehe.local:4873"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/webcomputing/assistant-alexa"
