@@ -8,9 +8,11 @@ export class AlexaHandle extends AbstractResponseHandler implements HandlerInter
   forceAuthenticated: boolean = false;
   isSSML: boolean = false;
 
+  reprompts: string[] | null = null;
+
   cardTitle: string | null = null;
-  displayText: string | null = null;
-  displayImage: string | null = null;
+  cardBody: string | null = null;
+  cardImage: string | null = null;
   
   constructor(
     @inject("core:root:current-request-context") extraction: rootInterfaces.RequestContext,
@@ -29,8 +31,14 @@ export class AlexaHandle extends AbstractResponseHandler implements HandlerInter
       response.response.card = this.createCard();
     }
 
+    // Add main speech
     if (this.voiceMessage !== null) {
       response.response.outputSpeech = this.getSpeechBody();
+    }
+
+    // Add reprompt
+    if (this.reprompts !== null && this.reprompts.length > 0) {
+      response.response.reprompt = { "outputSpeech": this.getSpeechBody(this.reprompts[0]) };
     }
     
     return response;
@@ -41,24 +49,24 @@ export class AlexaHandle extends AbstractResponseHandler implements HandlerInter
   }
 
   createCard(): askInterfaces.Card {
-    if (this.cardTitle === null || this.displayText === null)
+    if (this.cardTitle === null || this.cardBody === null)
       throw new Error("cardTitle and displayText must not be null!");
 
-    if (this.displayImage === null) {
+    if (this.cardImage === null) {
       return {
         type: askInterfaces.CardType.Simple,
         title: this.cardTitle,
-        content: this.displayText
+        content: this.cardBody
       }
     } else {
       return {
         type: askInterfaces.CardType.Standard,
         title: this.cardTitle,
-        text: this.displayText,
+        text: this.cardBody,
         image: {
           // TODO
-          smallImageUrl: this.displayImage,
-          largeImageUrl: this.displayImage  
+          smallImageUrl: this.cardImage,
+          largeImageUrl: this.cardImage  
         }
       }
     }
@@ -73,18 +81,18 @@ export class AlexaHandle extends AbstractResponseHandler implements HandlerInter
     };
   }
 
-  private getSpeechBody(): askInterfaces.OutputSpeech {
-    this.voiceMessage = this.voiceMessage === null ? "" : this.voiceMessage;
+  private getSpeechBody(voiceMessage = this.voiceMessage): askInterfaces.OutputSpeech {
+    if (voiceMessage === null) voiceMessage = "";
 
     if (this.isSSML) {
       return {
         type: "SSML",
-        ssml: this.voiceMessage
+        ssml: voiceMessage
       };
     } else {
       return {
         type: "PlainText",
-        text: this.voiceMessage
+        text: voiceMessage
       }
     };
   }

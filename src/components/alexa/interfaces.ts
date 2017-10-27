@@ -19,8 +19,9 @@ export interface ExtractionInterface extends
   unifierInterfaces.OptionalExtractions.OAuthExtraction {}
 export interface HandlerInterface extends 
   unifierInterfaces.MinimalResponseHandler, 
-  unifierInterfaces.OptionalHandlerFeatures.Display.SimpleCardDisplay,
-  unifierInterfaces.OptionalHandlerFeatures.Display.ImageCardDisplay,
+  unifierInterfaces.OptionalHandlerFeatures.Reprompt,
+  unifierInterfaces.OptionalHandlerFeatures.GUI.Card.Simple,
+  unifierInterfaces.OptionalHandlerFeatures.GUI.Card.Image,
   unifierInterfaces.OptionalHandlerFeatures.AuthenticationHandler,
   unifierInterfaces.OptionalHandlerFeatures.SSMLHandler {}; 
 
