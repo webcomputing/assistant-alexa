@@ -50,7 +50,7 @@ export class AlexaHandle extends AbstractResponseHandler implements HandlerInter
 
   createCard(): askInterfaces.Card {
     if (this.cardTitle === null || this.cardBody === null)
-      throw new Error("cardTitle and displayText must not be null!");
+      throw new Error("cardTitle and cardBody must not be null!");
 
     if (this.cardImage === null) {
       return {

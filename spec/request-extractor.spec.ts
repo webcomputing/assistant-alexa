@@ -55,12 +55,8 @@ describe("RequestExtractor", function() {
   });
 
   describe("extract", function() {
-    beforeEach(async function(done) {
+    it("returns correct extraction", async function(done) {
       this.extraction = await extractor.extract(context);
-      done();
-    });
-
-    it("returns correct extraction", function() {
       expect(this.extraction).toEqual({
         sessionID: "alexa-SessionId.d391741c-a96f-4393-b7b4-ee76c81c24d3",
         intent: "test",
@@ -69,6 +65,19 @@ describe("RequestExtractor", function() {
         component: extractor.component,
         oAuthToken: "mockOAuthToken",
         temporalAuthToken: "temporalUserId"
+      });
+      done()
+    });
+
+    describe("with FORCED_ALEXA_OAUTH_TOKEN environment variable given", function() {
+      beforeEach(async function(done) {
+        process.env.FORCED_ALEXA_OAUTH_TOKEN = "test";
+        this.extraction = await extractor.extract(context);
+        done();
+      });
+
+      it("returns content of FORCED_ALEXA_OAUTH_TOKEN as extraction result", function() {
+        expect(this.extraction.oAuthToken).toEqual("test");
       });
     });
   });
