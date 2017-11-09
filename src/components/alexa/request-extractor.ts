@@ -50,8 +50,6 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
         oAuthToken: typeof user === "undefined" ? null : user,
         temporalAuthToken: this.getTemporalAuth(context)
       };
-
-      log("Resolved context: %o", resolvedContext);
       resolve(resolvedContext);
     });
   }
