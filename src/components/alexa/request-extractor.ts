@@ -104,7 +104,12 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
   }
 
   private getUser(context: AlexaRequestContext): string | undefined {
-    return typeof process.env.FORCED_ALEXA_OAUTH_TOKEN !== "undefined" ? process.env.FORCED_ALEXA_OAUTH_TOKEN :  context.body.session.user.accessToken
+    if (typeof process.env.FORCED_ALEXA_OAUTH_TOKEN !== "undefined") {
+      log("Using preconfigured mock oauth tocken..");
+      return process.env.FORCED_ALEXA_OAUTH_TOKEN;
+    } else {
+      return context.body.session.user.accessToken;
+    }
   }
 
   /* Returns GenericIntent if request is a GenericIntent, or null, if not */
