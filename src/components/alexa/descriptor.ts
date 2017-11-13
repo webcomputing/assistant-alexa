@@ -8,9 +8,7 @@ import { unifierInterfaces } from "assistant-source";
 
 export const defaultConfiguration: OptionalConfiguration = {
   route: "/alexa",
-  parameters: {
-    number: "AMAZON.NUMBER"
-  },
+  parameters: {},
   useVerifier: true
 };
 

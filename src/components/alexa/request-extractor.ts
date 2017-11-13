@@ -68,6 +68,10 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
   }
 
   private fitsInternal(context: AlexaRequestContext) {
+    if (typeof this.configuration.applicationID !== "string") {
+      throw new Error("You did not configure an applicationID. Using assistant-alexa without configuring an applicationID is not possible.");
+    }
+
     if (typeof context.body.session === "undefined" || typeof context.body.session.application === "undefined") return false;
     return context.path === this.configuration.route && context.body.session.application.applicationId === this.configuration.applicationID
   }

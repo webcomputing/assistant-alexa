@@ -8,7 +8,7 @@ describe("RequestExtractor", function() {
 
   beforeEach(function() {
     extractor = this.container.inversifyInstance.get(unifierInterfaces.componentInterfaces.requestProcessor);
-    context = Object.assign({}, validRequestContext);
+    context = JSON.parse(JSON.stringify(validRequestContext));
   });
 
   describe("fits", function() {
@@ -17,6 +17,16 @@ describe("RequestExtractor", function() {
         it("returns true", function() {
           return extractor.fits(context).then(result => expect(result).toBeTruthy());
         });
+      });
+    });
+
+    describe("without configured applicationID", function() {
+      beforeEach(function() {
+        delete (extractor as any).configuration.applicationID;
+      });
+
+      it("throws error", function() {
+        return extractor.fits(context).then(result => fail()).catch(result => expect(true).toBeTruthy());
       });
     });
 
