@@ -50,8 +50,6 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
         oAuthToken: typeof user === "undefined" ? null : user,
         temporalAuthToken: this.getTemporalAuth(context)
       };
-
-      log("Resolved context: %o", resolvedContext);
       resolve(resolvedContext);
     });
   }
@@ -70,6 +68,11 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
   }
 
   private fitsInternal(context: AlexaRequestContext) {
+    if (typeof this.configuration.applicationID !== "string") {
+      throw new Error("You did not configure an applicationID. Using assistant-alexa without configuring an applicationID is not possible.");
+    }
+
+    if (typeof context.body.session === "undefined" || typeof context.body.session.application === "undefined") return false;
     return context.path === this.configuration.route && context.body.session.application.applicationId === this.configuration.applicationID
   }
 
@@ -105,7 +108,12 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
   }
 
   private getUser(context: AlexaRequestContext): string | undefined {
-    return context.body.session.user.accessToken
+    if (typeof process.env.FORCED_ALEXA_OAUTH_TOKEN !== "undefined") {
+      log("Using preconfigured mock oauth tocken..");
+      return process.env.FORCED_ALEXA_OAUTH_TOKEN;
+    } else {
+      return context.body.session.user.accessToken;
+    }
   }
 
   /* Returns GenericIntent if request is a GenericIntent, or null, if not */

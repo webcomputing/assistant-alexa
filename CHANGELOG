@@ -1,0 +1,7 @@
+version 0.2
+- adds reprompts, applies changes of new assistantjs version
+- adds debugging of oauth requests via FORCED_ALEXA_OAUTH_TOKEN variable
+- removes logging output about resolved context
+
+version 0.1
+- initial public release

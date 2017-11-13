@@ -8,7 +8,7 @@ describe("RequestExtractor", function() {
 
   beforeEach(function() {
     extractor = this.container.inversifyInstance.get(unifierInterfaces.componentInterfaces.requestProcessor);
-    context = Object.assign({}, validRequestContext);
+    context = JSON.parse(JSON.stringify(validRequestContext));
   });
 
   describe("fits", function() {
@@ -17,6 +17,16 @@ describe("RequestExtractor", function() {
         it("returns true", function() {
           return extractor.fits(context).then(result => expect(result).toBeTruthy());
         });
+      });
+    });
+
+    describe("without configured applicationID", function() {
+      beforeEach(function() {
+        delete (extractor as any).configuration.applicationID;
+      });
+
+      it("throws error", function() {
+        return extractor.fits(context).then(result => fail()).catch(result => expect(true).toBeTruthy());
       });
     });
 
@@ -55,12 +65,8 @@ describe("RequestExtractor", function() {
   });
 
   describe("extract", function() {
-    beforeEach(async function(done) {
+    it("returns correct extraction", async function(done) {
       this.extraction = await extractor.extract(context);
-      done();
-    });
-
-    it("returns correct extraction", function() {
       expect(this.extraction).toEqual({
         sessionID: "alexa-SessionId.d391741c-a96f-4393-b7b4-ee76c81c24d3",
         intent: "test",
@@ -69,6 +75,19 @@ describe("RequestExtractor", function() {
         component: extractor.component,
         oAuthToken: "mockOAuthToken",
         temporalAuthToken: "temporalUserId"
+      });
+      done()
+    });
+
+    describe("with FORCED_ALEXA_OAUTH_TOKEN environment variable given", function() {
+      beforeEach(async function(done) {
+        process.env.FORCED_ALEXA_OAUTH_TOKEN = "test";
+        this.extraction = await extractor.extract(context);
+        done();
+      });
+
+      it("returns content of FORCED_ALEXA_OAUTH_TOKEN as extraction result", function() {
+        expect(this.extraction.oAuthToken).toEqual("test");
       });
     });
   });
