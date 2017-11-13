@@ -1,5 +1,5 @@
 ## assistant-alexa
-This package integrates Amazon Alexa into [AssistantJS][2]. Just install it with `npm install assistant-alexa --save` and add it as an dependency to your `index.ts`:
+This package integrates Amazon Alexa into [AssistantJS][1]. Just install it with `npm install assistant-alexa --save` and add it as an dependency to your `index.ts`:
 ```typescript
 import { descriptor as alexaDescriptor } from "assistant-alexa";
 
