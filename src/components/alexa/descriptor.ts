@@ -4,7 +4,7 @@ import { AlexaHandle } from "./handle";
 import { AlexaGenerator } from "./generator";
 import { OptionalConfiguration } from "./interfaces";
 
-import { unifierInterfaces } from "assistant-source";
+import { RequestExtractor as AssistantJSRequestExtractor, PlatformGenerator } from "assistant-source";
 
 export const defaultConfiguration: OptionalConfiguration = {
   route: "/alexa",
@@ -18,10 +18,10 @@ export let descriptor: ComponentDescriptor = {
   bindings: {
     root: (bindService, lookupService) => {
       bindService
-        .bindExtension<unifierInterfaces.RequestConversationExtractor>(lookupService.lookup("core:unifier").getInterface("requestProcessor"))
+        .bindExtension<AssistantJSRequestExtractor>(lookupService.lookup("core:unifier").getInterface("requestProcessor"))
         .to(RequestExtractor);
 
-      bindService.bindExtension<unifierInterfaces.PlatformGenerator>(lookupService.lookup("core:unifier").getInterface("platformGenerator")).to(AlexaGenerator);
+      bindService.bindExtension<PlatformGenerator.Extension>(lookupService.lookup("core:unifier").getInterface("platformGenerator")).to(AlexaGenerator);
     },
     request: (bindService) => {
       bindService.bindGlobalService("current-response-handler").to(AlexaHandle);

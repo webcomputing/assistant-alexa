@@ -1,4 +1,4 @@
-import { unifierInterfaces, rootInterfaces } from "assistant-source";
+import { RequestExtractor as AssistantJSRequestExtractor, intent, GenericIntent } from "assistant-source";
 import * as verifyAlexa from "alexa-verifier";
 
 import { log } from "../../global";
@@ -8,7 +8,7 @@ import { Configuration, askInterfaces, ExtractionInterface, AlexaRequestContext 
 import { amazonToGenericIntent as dictionary } from "./intent-dict";
 
 @injectable()
-export class RequestExtractor implements unifierInterfaces.RequestConversationExtractor {
+export class RequestExtractor implements AssistantJSRequestExtractor {
   public component: Component;
   private configuration: Configuration;
   verifyAlexaProxy: any;
@@ -46,7 +46,7 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
         intent: this.getIntent(context),
         entities: this.getEntities(context),
         language: this.getLanguage(context),
-        component: this.component,
+        platform: this.component.name,
         oAuthToken: typeof user === "undefined" ? null : user,
         temporalAuthToken: this.getTemporalAuth(context)
       };
@@ -80,7 +80,7 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
     return "alexa-" + context.body.session.sessionId;
   }
 
-  private getIntent(context: AlexaRequestContext): unifierInterfaces.intent {
+  private getIntent(context: AlexaRequestContext): intent {
     let genericIntent = this.getGenericIntent(context);
     if (genericIntent !== null) return genericIntent;
 
@@ -117,19 +117,19 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
   }
 
   /* Returns GenericIntent if request is a GenericIntent, or null, if not */
-  private getGenericIntent(context: AlexaRequestContext): unifierInterfaces.GenericIntent | null {
+  private getGenericIntent(context: AlexaRequestContext): GenericIntent | null {
     switch (context.body.request.type) {
       case askInterfaces.RequestType.LaunchRequest:
-        return unifierInterfaces.GenericIntent.Invoke;
+        return GenericIntent.Invoke;
       case askInterfaces.RequestType.SessionEndedRequest:
-        return unifierInterfaces.GenericIntent.Unanswered;
+        return GenericIntent.Unanswered;
       default:
         let intentRequest = context.body.request as askInterfaces.IntentRequest;
         return RequestExtractor.makeIntentStringToGenericIntent(intentRequest.intent.name);
     }
   }
 
-  static makeIntentStringToGenericIntent(intent: string): unifierInterfaces.GenericIntent | null {
+  static makeIntentStringToGenericIntent(intent: string): GenericIntent | null {
     return dictionary.hasOwnProperty(intent) ? dictionary[intent] : null;
   }
 }
