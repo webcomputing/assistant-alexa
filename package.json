@@ -1,6 +1,6 @@
 {
   "name": "assistant-alexa",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Enables Amazon Alexa support in AssistantJS",
   "scripts": {
     "test": "jasmine-ts spec/**/*.spec.ts"
@@ -10,7 +10,7 @@
     "AssistantJS"
   ],
   "peerDependencies": {
-    "assistant-source": "^0.2.0"
+    "assistant-source": "^0.3.0"
   },
   "devDependencies": {
     "assistant-source": "../assistant-source/assistant-source-0.3.0.tgz",
