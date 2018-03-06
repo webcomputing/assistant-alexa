@@ -1,11 +1,11 @@
-import { unifierInterfaces, stateMachineInterfaces } from "assistant-source";
+import { State, ResponseFactory } from "assistant-source";
 import { injectable, inject } from "inversify";
 
 @injectable()
-export class MainState implements stateMachineInterfaces.State {
-  responseFactory: unifierInterfaces.ResponseFactory;
+export class MainState implements State.Required {
+  responseFactory: ResponseFactory;
 
-  constructor(@inject("core:unifier:current-response-factory") factory: unifierInterfaces.ResponseFactory) {
+  constructor(@inject("core:unifier:current-response-factory") factory: ResponseFactory) {
     this.responseFactory = factory;
   }
 
