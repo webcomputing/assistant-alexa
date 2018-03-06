@@ -23,3 +23,6 @@ export namespace Configuration {
   /** Available configuration settings in a runtime application */
   export interface Runtime extends Defaults, Required {};
 }
+
+/** Name of current component */
+export const COMPONENT_NAME = "alexa";

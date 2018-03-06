@@ -1,24 +1,26 @@
-import { RequestExtractor as AssistantJSRequestExtractor, intent, GenericIntent, Logger, injectionNames } from "assistant-source";
+import { RequestExtractor as AssistantJSRequestExtractor, intent, GenericIntent, Logger, injectionNames, ComponentSpecificLoggerFactory } from "assistant-source";
 import * as verifyAlexa from "alexa-verifier";
 
 import { injectable, inject } from "inversify";
 import { Component } from "inversify-components";
 import { askInterfaces, ExtractionInterface, AlexaRequestContext } from "./public-interfaces";
 import { amazonToGenericIntent as dictionary } from "./intent-dict";
-import { Configuration } from "./private-interfaces";
+import { Configuration, COMPONENT_NAME } from "./private-interfaces";
 
 @injectable()
 export class RequestExtractor implements AssistantJSRequestExtractor {
   public component: Component<Configuration.Runtime>;
   private configuration: Configuration.Runtime;
+  private logger: Logger;
   verifyAlexaProxy: any;
 
   constructor(
     @inject("meta:component//alexa") componentMeta: Component<Configuration.Runtime>,
-    @inject(injectionNames.logger) private logger: Logger
+    @inject(injectionNames.componentSpecificLoggerFactory) loggerFactory: ComponentSpecificLoggerFactory
   ) {
     this.component = componentMeta;
     this.configuration = componentMeta.configuration;
+    this.logger = loggerFactory(COMPONENT_NAME, 'root');
     this.verifyAlexaProxy = this.resolveVerifier();
   }
 
@@ -28,18 +30,18 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
         this.verifyAlexaProxy(context.headers["signaturecertchainurl"], context.headers["signature"], JSON.stringify(context.body), (error) => {
           if (error) {
             this.logger.error(
-              error, 
-              "Alexa: Incoming request matched for configured route and applicationID, but could not be verified correctly with alexa-verifier module.", 
-              { requestId: context.id }
+              { requestId: context.id }, 
+              ": Incoming request matched for configured route and applicationID, but could not be verified correctly with alexa-verifier module. Error = ", 
+              error
             );
             resolve(false);
           } else {
-            this.logger.debug("Alexa: Incomming request matched.", { requestId: context.id });
+            this.logger.debug({ requestId: context.id }, "Incomming request matched.");
             resolve(true);
           }
         });
       } else {
-        this.logger.debug("Alexa: Incomming request did not match for route / applicationID.", { requestId: context.id });
+        this.logger.debug({ requestId: context.id }, "Incomming request did not match for route / applicationID.");
         resolve(false);
       }
     });
@@ -67,7 +69,7 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
 
   resolveVerifier() {
     if (this.configuration.useVerifier === false) {
-      this.logger.warn("Alexa: Using proxy verifier instead of alexa-verify. Hope you know what you are doing.");
+      this.logger.warn("Using proxy verifier instead of alexa-verify. Hope you know what you are doing.");
       return (chainurl, signature, body, callback: (error) => any) => { callback(false) };
     } else {
       return verifyAlexa
@@ -116,7 +118,7 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
 
   private getUser(context: AlexaRequestContext): string | undefined {
     if (typeof process.env.FORCED_ALEXA_OAUTH_TOKEN !== "undefined") {
-      this.logger.warn("Alexa: Using preconfigured mock oauth tocken.");
+      this.logger.warn("Using preconfigured mock oauth tocken.");
       return process.env.FORCED_ALEXA_OAUTH_TOKEN;
     } else {
       return context.body.session.user.accessToken;

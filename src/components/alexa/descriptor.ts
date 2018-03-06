@@ -2,7 +2,7 @@ import { ComponentDescriptor } from "inversify-components";
 import { RequestExtractor } from "./request-extractor";
 import { AlexaHandle } from "./handle";
 import { AlexaGenerator } from "./generator";
-import { Configuration } from "./private-interfaces";
+import { Configuration, COMPONENT_NAME } from "./private-interfaces";
 
 import { RequestExtractor as AssistantJSRequestExtractor, PlatformGenerator } from "assistant-source";
 
@@ -13,7 +13,7 @@ export const defaultConfiguration: Configuration.Defaults = {
 };
 
 export let descriptor: ComponentDescriptor<Configuration.Defaults> = {
-  name: "alexa",
+  name: COMPONENT_NAME,
   defaultConfiguration: defaultConfiguration,
   bindings: {
     root: (bindService, lookupService) => {
