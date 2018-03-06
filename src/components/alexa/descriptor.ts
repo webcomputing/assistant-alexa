@@ -2,17 +2,17 @@ import { ComponentDescriptor } from "inversify-components";
 import { RequestExtractor } from "./request-extractor";
 import { AlexaHandle } from "./handle";
 import { AlexaGenerator } from "./generator";
-import { OptionalConfiguration } from "./interfaces";
+import { Configuration } from "./private-interfaces";
 
 import { RequestExtractor as AssistantJSRequestExtractor, PlatformGenerator } from "assistant-source";
 
-export const defaultConfiguration: OptionalConfiguration = {
+export const defaultConfiguration: Configuration.Defaults = {
   route: "/alexa",
   parameters: {},
   useVerifier: true
 };
 
-export let descriptor: ComponentDescriptor = {
+export let descriptor: ComponentDescriptor<Configuration.Defaults> = {
   name: "alexa",
   defaultConfiguration: defaultConfiguration,
   bindings: {

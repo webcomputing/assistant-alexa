@@ -1,7 +1,7 @@
 import { Component } from "inversify-components";
 import { SpecSetup, PlatformSpecHelper, RequestContext, intent, } from "assistant-source";
 
-import { ExtractionInterface, HandlerInterface } from "./components/alexa/interfaces";
+import { ExtractionInterface, HandlerInterface } from "./components/alexa/public-interfaces";
 import { AlexaHandle } from "./components/alexa/handle";
 
 export class SpecHelper implements PlatformSpecHelper {

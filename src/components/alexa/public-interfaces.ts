@@ -1,21 +1,14 @@
 import { MinimalRequestExtraction, OptionalExtractions, OptionalHandlerFeatures, MinimalResponseHandler, RequestContext } from "assistant-source";
 import * as askInterfaces from "./skill-kit-interfaces";
+import { Configuration } from "./private-interfaces";
 
-export interface OptionalConfiguration {
-  /** Route of alexa requests. Defaults to "/alexa". */
-  route?: string;
+/** Configuration of alexa component */
+export interface AlexaConfiguration extends Partial<Configuration.Defaults>, Configuration.Required {};
 
-  /** Mapping of slot values. Use your AssistantJS slot type as key and your alexa slot type as value. */
-  parameters?: { [name: string]: string };
-
-  /** If set to false, we will not use alexa-verifier to test valid requests. Using false might be useful for alexa simulator. Defaults to true. */
-  useVerifier?: boolean;
-};
-
-export interface Configuration extends OptionalConfiguration {
-  /** Your amazon alexa application id */
-  applicationID: string;
-};
+/** Property describing the configuration of the alexa component */
+export interface AlexaConfigurationAttribute {
+  "alexa": AlexaConfiguration;
+}
 
 export interface ExtractionInterface extends 
   MinimalRequestExtraction, 

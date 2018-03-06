@@ -4,18 +4,19 @@ import * as verifyAlexa from "alexa-verifier";
 import { log } from "../../global";
 import { injectable, inject } from "inversify";
 import { Component } from "inversify-components";
-import { Configuration, askInterfaces, ExtractionInterface, AlexaRequestContext } from "./interfaces";
+import { askInterfaces, ExtractionInterface, AlexaRequestContext } from "./public-interfaces";
 import { amazonToGenericIntent as dictionary } from "./intent-dict";
+import { Configuration } from "./private-interfaces";
 
 @injectable()
 export class RequestExtractor implements AssistantJSRequestExtractor {
-  public component: Component;
-  private configuration: Configuration;
+  public component: Component<Configuration.Runtime>;
+  private configuration: Configuration.Runtime;
   verifyAlexaProxy: any;
 
-  constructor(@inject("meta:component//alexa") componentMeta: Component) {
+  constructor(@inject("meta:component//alexa") componentMeta: Component<Configuration.Runtime>) {
     this.component = componentMeta;
-    this.configuration = componentMeta.configuration as Configuration;
+    this.configuration = componentMeta.configuration;
     this.verifyAlexaProxy = this.resolveVerifier();
   }
 

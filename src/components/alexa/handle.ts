@@ -1,7 +1,7 @@
 import { inject, injectable } from "inversify";
 import { ExecutableExtension } from "inversify-components";
 import { AbstractResponseHandler, RequestContext } from "assistant-source"
-import { askInterfaces, HandlerInterface } from "./interfaces";
+import { askInterfaces, HandlerInterface } from "./public-interfaces";
 
 @injectable()
 export class AlexaHandle extends AbstractResponseHandler implements HandlerInterface {

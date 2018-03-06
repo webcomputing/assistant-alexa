@@ -3,13 +3,13 @@ import { Component } from "inversify-components";
 import * as fs from "fs";
 import { PlatformGenerator, GenericIntent } from "assistant-source";
 
-import { Configuration } from "./interfaces";
+import { Configuration } from "./private-interfaces";
 import { genericIntentToAmazon } from "./intent-dict";
 
 @injectable()
 export class AlexaGenerator implements PlatformGenerator.Extension {
   @inject("meta:component//alexa")
-  private component: Component;
+  private component: Component<Configuration.Runtime>;
 
   execute(language: string, buildDir: string, intentConfigurations: PlatformGenerator.IntentConfiguration[], parameterMapping: PlatformGenerator.EntityMapping) {
     let currentBuildDir = buildDir + "/alexa";
@@ -106,7 +106,7 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
 
   private makeSlots(parameters: string[], parameterMapping: PlatformGenerator.EntityMapping): { name: string, type: string }[] {
     return parameters.map(name => {
-      let config = this.component.configuration as Configuration;
+      let config = this.component.configuration;
 
       if (typeof(config.parameters) === "undefined" || typeof(config.parameters[parameterMapping[name]]) === "undefined")
         throw Error("Missing amazon configured type for parameter '" + name + "'");
