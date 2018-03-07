@@ -9,7 +9,7 @@ import { descriptor as alexaDescriptor } from "assistant-alexa";
 assistantJs.registerComponent(alexaDescriptor);
 ```
 
-This component also integrates a generator into AssistantJS. So, executing `assistant g`, creates a alexa-specific build in your `builds` directory.
+This component also integrates a generator into AssistantJS. So executing `assistant g` creates an alexa-specific build in your `builds` directory.
 
 ### Configuration
 
