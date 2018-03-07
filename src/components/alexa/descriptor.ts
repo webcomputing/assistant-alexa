@@ -8,7 +8,7 @@ import { RequestExtractor as AssistantJSRequestExtractor, PlatformGenerator } fr
 
 export const defaultConfiguration: Configuration.Defaults = {
   route: "/alexa",
-  parameters: {},
+  entities: {},
   useVerifier: true
 };
 

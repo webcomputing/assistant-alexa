@@ -108,10 +108,10 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
     return parameters.map(name => {
       let config = this.component.configuration;
 
-      if (typeof(config.parameters) === "undefined" || typeof(config.parameters[parameterMapping[name]]) === "undefined")
+      if (typeof(config.entities) === "undefined" || typeof(config.entities[parameterMapping[name]]) === "undefined")
         throw Error("Missing amazon configured type for parameter '" + name + "'");
 
-      return { name: name, type: config.parameters[parameterMapping[name]]};
+      return { name: name, type: config.entities[parameterMapping[name]]};
     });
   }
 }

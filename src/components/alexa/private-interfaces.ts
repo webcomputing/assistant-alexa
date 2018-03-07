@@ -8,7 +8,7 @@ export namespace Configuration {
     route?: string;
 
     /** Mapping of slot values. Use your AssistantJS slot type as key and your alexa slot type as value. */
-    parameters?: { [name: string]: string };
+    entities?: { [name: string]: string };
 
     /** If set to false, we will not use alexa-verifier to test valid requests. Using false might be useful for alexa simulator. Defaults to true. */
     useVerifier?: boolean;
