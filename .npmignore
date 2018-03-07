@@ -6,3 +6,4 @@ jasmine.json
 gulpfile.js
 tsconfig.json
 .gitignore
+*.tgz
