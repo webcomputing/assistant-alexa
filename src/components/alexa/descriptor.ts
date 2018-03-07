@@ -2,26 +2,26 @@ import { ComponentDescriptor } from "inversify-components";
 import { RequestExtractor } from "./request-extractor";
 import { AlexaHandle } from "./handle";
 import { AlexaGenerator } from "./generator";
-import { OptionalConfiguration } from "./interfaces";
+import { Configuration, COMPONENT_NAME } from "./private-interfaces";
 
-import { unifierInterfaces } from "assistant-source";
+import { RequestExtractor as AssistantJSRequestExtractor, PlatformGenerator } from "assistant-source";
 
-export const defaultConfiguration: OptionalConfiguration = {
+export const defaultConfiguration: Configuration.Defaults = {
   route: "/alexa",
-  parameters: {},
+  entities: {},
   useVerifier: true
 };
 
-export let descriptor: ComponentDescriptor = {
-  name: "alexa",
+export let descriptor: ComponentDescriptor<Configuration.Defaults> = {
+  name: COMPONENT_NAME,
   defaultConfiguration: defaultConfiguration,
   bindings: {
     root: (bindService, lookupService) => {
       bindService
-        .bindExtension<unifierInterfaces.RequestConversationExtractor>(lookupService.lookup("core:unifier").getInterface("requestProcessor"))
+        .bindExtension<AssistantJSRequestExtractor>(lookupService.lookup("core:unifier").getInterface("requestProcessor"))
         .to(RequestExtractor);
 
-      bindService.bindExtension<unifierInterfaces.PlatformGenerator>(lookupService.lookup("core:unifier").getInterface("platformGenerator")).to(AlexaGenerator);
+      bindService.bindExtension<PlatformGenerator.Extension>(lookupService.lookup("core:unifier").getInterface("platformGenerator")).to(AlexaGenerator);
     },
     request: (bindService) => {
       bindService.bindGlobalService("current-response-handler").to(AlexaHandle);

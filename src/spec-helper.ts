@@ -1,19 +1,19 @@
 import { Component } from "inversify-components";
-import { SpecSetup, unifierInterfaces, rootInterfaces } from "assistant-source";
+import { SpecSetup, PlatformSpecHelper, RequestContext, intent, } from "assistant-source";
 
-import { ExtractionInterface, HandlerInterface } from "./components/alexa/interfaces";
+import { ExtractionInterface, HandlerInterface } from "./components/alexa/public-interfaces";
 import { AlexaHandle } from "./components/alexa/handle";
 
-export class SpecHelper implements unifierInterfaces.PlatformSpecHelper {
+export class SpecHelper implements PlatformSpecHelper {
   specSetup: SpecSetup
 
   constructor(assistantSpecSetup: SpecSetup) {
     this.specSetup = assistantSpecSetup;
   }
 
-  async pretendIntentCalled(intent: unifierInterfaces.intent, autoStart = true, additionalExtractions = {}, additionalContext = {}): Promise<HandlerInterface> {
+  async pretendIntentCalled(intent: intent, autoStart = true, additionalExtractions = {}, additionalContext = {}): Promise<HandlerInterface> {
     let extraction: ExtractionInterface = Object.assign({
-      component: this.specSetup.setup.container.inversifyInstance.get<Component>("meta:component//alexa"),
+      platform: "alexa",
       intent: intent,
       sessionID: "alexa-mock-session-id",
       language: "en",
@@ -21,7 +21,8 @@ export class SpecHelper implements unifierInterfaces.PlatformSpecHelper {
       temporalAuthToken: "alexa-mock-temp-auth-token"
     }, additionalExtractions);
 
-    let context: rootInterfaces.RequestContext = Object.assign({
+    let context: RequestContext = Object.assign({
+      id: "mocked-alexa-request-id",
       method: 'POST',
       path: '/alexa',
       body: {},

@@ -1,13 +1,14 @@
-import { unifierInterfaces, rootInterfaces } from "assistant-source";
+import { RequestContext } from "assistant-source";
 import { RequestExtractor } from "../src/components/alexa/request-extractor";
 import { validRequestContext } from "./support/mocks/request-context";
+import { componentInterfaces } from "assistant-source/lib/components/unifier/private-interfaces";
 
 describe("RequestExtractor", function() {
   let extractor: RequestExtractor;
-  let context: rootInterfaces.RequestContext;
+  let context: RequestContext;
 
   beforeEach(function() {
-    extractor = this.container.inversifyInstance.get(unifierInterfaces.componentInterfaces.requestProcessor);
+    extractor = this.container.inversifyInstance.get(componentInterfaces.requestProcessor);
     context = JSON.parse(JSON.stringify(validRequestContext));
   });
 
@@ -72,7 +73,7 @@ describe("RequestExtractor", function() {
         intent: "test",
         entities: {"entity1": "entityvalue"},
         language: "en",
-        component: extractor.component,
+        platform: extractor.component.name,
         oAuthToken: "mockOAuthToken",
         temporalAuthToken: "temporalUserId"
       });

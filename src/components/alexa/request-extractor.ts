@@ -1,38 +1,47 @@
-import { unifierInterfaces, rootInterfaces } from "assistant-source";
+import { RequestExtractor as AssistantJSRequestExtractor, intent, GenericIntent, Logger, injectionNames, ComponentSpecificLoggerFactory } from "assistant-source";
 import * as verifyAlexa from "alexa-verifier";
 
-import { log } from "../../global";
 import { injectable, inject } from "inversify";
 import { Component } from "inversify-components";
-import { Configuration, askInterfaces, ExtractionInterface, AlexaRequestContext } from "./interfaces";
+import { askInterfaces, ExtractionInterface, AlexaRequestContext } from "./public-interfaces";
 import { amazonToGenericIntent as dictionary } from "./intent-dict";
+import { Configuration, COMPONENT_NAME } from "./private-interfaces";
 
 @injectable()
-export class RequestExtractor implements unifierInterfaces.RequestConversationExtractor {
-  public component: Component;
-  private configuration: Configuration;
+export class RequestExtractor implements AssistantJSRequestExtractor {
+  public component: Component<Configuration.Runtime>;
+  private configuration: Configuration.Runtime;
+  private logger: Logger;
   verifyAlexaProxy: any;
 
-  constructor(@inject("meta:component//alexa") componentMeta: Component) {
+  constructor(
+    @inject("meta:component//alexa") componentMeta: Component<Configuration.Runtime>,
+    @inject(injectionNames.componentSpecificLoggerFactory) loggerFactory: ComponentSpecificLoggerFactory
+  ) {
     this.component = componentMeta;
-    this.configuration = componentMeta.configuration as Configuration;
+    this.configuration = componentMeta.configuration;
+    this.logger = loggerFactory(COMPONENT_NAME, 'root');
     this.verifyAlexaProxy = this.resolveVerifier();
   }
 
   fits(context: AlexaRequestContext): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       if (this.fitsInternal(context)) {
-        this.verifyAlexaProxy(context.headers["signaturecertchainurl"], context.headers["signature"], JSON.stringify(context.body), function(error) {
+        this.verifyAlexaProxy(context.headers["signaturecertchainurl"], context.headers["signature"], JSON.stringify(context.body), (error) => {
           if (error) {
-            log("Incoming request matched for configured route and applicationID, but could not be verified correctly with alexa-verifier module. Given error = ", error);
+            this.logger.error(
+              { requestId: context.id }, 
+              ": Incoming request matched for configured route and applicationID, but could not be verified correctly with alexa-verifier module. Error = ", 
+              error
+            );
             resolve(false);
           } else {
-            log("Incoming request matched for alexa extractor");
+            this.logger.debug({ requestId: context.id }, "Incomming request matched.");
             resolve(true);
           }
         });
       } else {
-        log("Incomming request did not match configured route and applicationID");
+        this.logger.debug({ requestId: context.id }, "Incomming request did not match for route / applicationID.");
         resolve(false);
       }
     });
@@ -46,7 +55,7 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
         intent: this.getIntent(context),
         entities: this.getEntities(context),
         language: this.getLanguage(context),
-        component: this.component,
+        platform: this.component.name,
         oAuthToken: typeof user === "undefined" ? null : user,
         temporalAuthToken: this.getTemporalAuth(context)
       };
@@ -60,7 +69,7 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
 
   resolveVerifier() {
     if (this.configuration.useVerifier === false) {
-      log("Using proxy verifier instead of alexa-verify. Hope you know what you are doing.");
+      this.logger.warn("Using proxy verifier instead of alexa-verify. Hope you know what you are doing.");
       return (chainurl, signature, body, callback: (error) => any) => { callback(false) };
     } else {
       return verifyAlexa
@@ -80,7 +89,7 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
     return "alexa-" + context.body.session.sessionId;
   }
 
-  private getIntent(context: AlexaRequestContext): unifierInterfaces.intent {
+  private getIntent(context: AlexaRequestContext): intent {
     let genericIntent = this.getGenericIntent(context);
     if (genericIntent !== null) return genericIntent;
 
@@ -109,7 +118,7 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
 
   private getUser(context: AlexaRequestContext): string | undefined {
     if (typeof process.env.FORCED_ALEXA_OAUTH_TOKEN !== "undefined") {
-      log("Using preconfigured mock oauth tocken..");
+      this.logger.warn("Using preconfigured mock oauth tocken.");
       return process.env.FORCED_ALEXA_OAUTH_TOKEN;
     } else {
       return context.body.session.user.accessToken;
@@ -117,19 +126,19 @@ export class RequestExtractor implements unifierInterfaces.RequestConversationEx
   }
 
   /* Returns GenericIntent if request is a GenericIntent, or null, if not */
-  private getGenericIntent(context: AlexaRequestContext): unifierInterfaces.GenericIntent | null {
+  private getGenericIntent(context: AlexaRequestContext): GenericIntent | null {
     switch (context.body.request.type) {
       case askInterfaces.RequestType.LaunchRequest:
-        return unifierInterfaces.GenericIntent.Invoke;
+        return GenericIntent.Invoke;
       case askInterfaces.RequestType.SessionEndedRequest:
-        return unifierInterfaces.GenericIntent.Unanswered;
+        return GenericIntent.Unanswered;
       default:
         let intentRequest = context.body.request as askInterfaces.IntentRequest;
         return RequestExtractor.makeIntentStringToGenericIntent(intentRequest.intent.name);
     }
   }
 
-  static makeIntentStringToGenericIntent(intent: string): unifierInterfaces.GenericIntent | null {
+  static makeIntentStringToGenericIntent(intent: string): GenericIntent | null {
     return dictionary.hasOwnProperty(intent) ? dictionary[intent] : null;
   }
 }

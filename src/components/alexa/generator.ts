@@ -1,17 +1,17 @@
 import { injectable, inject } from "inversify";
 import { Component } from "inversify-components";
 import * as fs from "fs";
-import { unifierInterfaces } from "assistant-source";
+import { PlatformGenerator, GenericIntent } from "assistant-source";
 
-import { Configuration } from "./interfaces";
+import { Configuration } from "./private-interfaces";
 import { genericIntentToAmazon } from "./intent-dict";
 
 @injectable()
-export class AlexaGenerator implements unifierInterfaces.PlatformGenerator {
+export class AlexaGenerator implements PlatformGenerator.Extension {
   @inject("meta:component//alexa")
-  private component: Component;
+  private component: Component<Configuration.Runtime>;
 
-  execute(language: string, buildDir: string, intentConfigurations: unifierInterfaces.GenerateIntentConfiguration[], parameterMapping: unifierInterfaces.GeneratorEntityMapping) {
+  execute(language: string, buildDir: string, intentConfigurations: PlatformGenerator.IntentConfiguration[], parameterMapping: PlatformGenerator.EntityMapping) {
     let currentBuildDir = buildDir + "/alexa";
 
     console.log("================= PROCESSING ON ALEXA =================");
@@ -39,7 +39,7 @@ export class AlexaGenerator implements unifierInterfaces.PlatformGenerator {
   /** Returns Intent Schema for Amazon Alexa Config
    * @param preparedIntentConfiguration: Result of prepareConfiguration()
    */
-  buildIntentSchema(preparedIntentConfiguration: PreparedIntentConfiguration[], parameterMapping: unifierInterfaces.GeneratorEntityMapping) {
+  buildIntentSchema(preparedIntentConfiguration: PreparedIntentConfiguration[], parameterMapping: PlatformGenerator.EntityMapping) {
     return {
       intents: preparedIntentConfiguration.map(config => {
         let slots = this.makeSlots(config.entities, parameterMapping);
@@ -74,12 +74,12 @@ export class AlexaGenerator implements unifierInterfaces.PlatformGenerator {
   }
 
   /** Returns BuildIntentConfiguration[] but with all unspeakable intents filtered out, and all other GenericIntents converted to amazon specific strings */
-  prepareConfiguration(intentConfigurations: unifierInterfaces.GenerateIntentConfiguration[]): PreparedIntentConfiguration[] {
+  prepareConfiguration(intentConfigurations: PlatformGenerator.IntentConfiguration[]): PreparedIntentConfiguration[] {
     // Leave out unspeakable intents
-    let withoutUnspeakable = intentConfigurations.filter(config => typeof(config.intent) === "string" || unifierInterfaces.GenericIntent.isSpeakable(config.intent));
+    let withoutUnspeakable = intentConfigurations.filter(config => typeof(config.intent) === "string" || GenericIntent.isSpeakable(config.intent));
 
     // Leave out all non-platform intents without utterances, but tell user about this
-    let withoutUndefinedUtterances: unifierInterfaces.GenerateIntentConfiguration[] = [];
+    let withoutUndefinedUtterances: PlatformGenerator.IntentConfiguration[] = [];
     withoutUnspeakable.forEach(config => {
       if (typeof(config.intent) === "string" && (typeof(config.utterances) === "undefined" || config.utterances.length === 0)) {
         console.warn("You did not specify any utterances for intent: '" + config.intent + "'. Omitting..");
@@ -104,18 +104,18 @@ export class AlexaGenerator implements unifierInterfaces.PlatformGenerator {
     return preparedSet;
   }
 
-  private makeSlots(parameters: string[], parameterMapping: unifierInterfaces.GeneratorEntityMapping): { name: string, type: string }[] {
+  private makeSlots(parameters: string[], parameterMapping: PlatformGenerator.EntityMapping): { name: string, type: string }[] {
     return parameters.map(name => {
-      let config = this.component.configuration as Configuration;
+      let config = this.component.configuration;
 
-      if (typeof(config.parameters) === "undefined" || typeof(config.parameters[parameterMapping[name]]) === "undefined")
+      if (typeof(config.entities) === "undefined" || typeof(config.entities[parameterMapping[name]]) === "undefined")
         throw Error("Missing amazon configured type for parameter '" + name + "'");
 
-      return { name: name, type: config.parameters[parameterMapping[name]]};
+      return { name: name, type: config.entities[parameterMapping[name]]};
     });
   }
 }
 
-export interface PreparedIntentConfiguration extends unifierInterfaces.GenerateIntentConfiguration {
+export interface PreparedIntentConfiguration extends PlatformGenerator.IntentConfiguration {
   intent: string;
 }
