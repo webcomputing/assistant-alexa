@@ -1,6 +1,6 @@
 import { inject, injectable } from "inversify";
 import { ExecutableExtension } from "inversify-components";
-import { AbstractResponseHandler, RequestContext } from "assistant-source"
+import { AbstractResponseHandler, RequestContext, ResponseHandlerExtensions } from "assistant-source"
 import { askInterfaces, HandlerInterface } from "./public-interfaces";
 
 @injectable()
@@ -16,9 +16,10 @@ export class AlexaHandle extends AbstractResponseHandler implements HandlerInter
   
   constructor(
     @inject("core:root:current-request-context") extraction: RequestContext,
-    @inject("core:unifier:current-kill-session-promise") killSession: () => Promise<void>
+    @inject("core:unifier:current-kill-session-promise") killSession: () => Promise<void>,
+    @inject("core:unifier:response-handler-extensions") responseHandlerExtensions: ResponseHandlerExtensions
   ) {
-    super(extraction, killSession)
+    super(extraction, killSession, responseHandlerExtensions);
   }
 
   getBody(): askInterfaces.ResponseBody {
