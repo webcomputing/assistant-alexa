@@ -12,15 +12,15 @@ export interface AlexaConfigurationAttribute {
 
 export interface ExtractionInterface extends 
   MinimalRequestExtraction, 
-  OptionalExtractions.TemporalAuthExtraction,
-  OptionalExtractions.OAuthExtraction {}
+  OptionalExtractions.TemporalAuth,
+  OptionalExtractions.OAuth {}
 export interface HandlerInterface extends 
   MinimalResponseHandler, 
   OptionalHandlerFeatures.Reprompt,
   OptionalHandlerFeatures.GUI.Card.Simple,
   OptionalHandlerFeatures.GUI.Card.Image,
-  OptionalHandlerFeatures.AuthenticationHandler,
-  OptionalHandlerFeatures.SSMLHandler {}; 
+  OptionalHandlerFeatures.Authentication,
+  OptionalHandlerFeatures.SSML {}; 
 
 export interface AlexaRequestContext extends RequestContext {
   body: askInterfaces.RequestBody;
