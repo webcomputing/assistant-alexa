@@ -1,6 +1,12 @@
-import { MinimalRequestExtraction, OptionalExtractions, OptionalHandlerFeatures, MinimalResponseHandler, RequestContext } from "assistant-source";
-import * as askInterfaces from "./skill-kit-interfaces";
+import {
+  MinimalRequestExtraction,
+  MinimalResponseHandler,
+  OptionalExtractions,
+  OptionalHandlerFeatures,
+  RequestContext
+  } from "assistant-source";
 import { Configuration } from "./private-interfaces";
+import * as askInterfaces from "./skill-kit-interfaces";
 
 /** Configuration of alexa component */
 export interface AlexaConfiguration extends Partial<Configuration.Defaults>, Configuration.Required {};
@@ -13,7 +19,8 @@ export interface AlexaConfigurationAttribute {
 export interface ExtractionInterface extends 
   MinimalRequestExtraction, 
   OptionalExtractions.TemporalAuth,
-  OptionalExtractions.OAuth {}
+  OptionalExtractions.Timestamp,
+  OptionalExtractions.OAuth { }
 export interface HandlerInterface extends 
   MinimalResponseHandler, 
   OptionalHandlerFeatures.Reprompt,

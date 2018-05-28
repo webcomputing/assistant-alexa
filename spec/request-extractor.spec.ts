@@ -1,7 +1,7 @@
 import { RequestContext } from "assistant-source";
+import { componentInterfaces } from "assistant-source/lib/components/unifier/private-interfaces";
 import { RequestExtractor } from "../src/components/alexa/request-extractor";
 import { validRequestContext } from "./support/mocks/request-context";
-import { componentInterfaces } from "assistant-source/lib/components/unifier/private-interfaces";
 
 describe("RequestExtractor", function() {
   let extractor: RequestExtractor;
@@ -71,11 +71,12 @@ describe("RequestExtractor", function() {
       expect(this.extraction).toEqual({
         sessionID: "alexa-SessionId.d391741c-a96f-4393-b7b4-ee76c81c24d3",
         intent: "test",
-        entities: {"entity1": "entityvalue"},
+        entities: { entity1: "entityvalue" },
         language: "en",
         platform: extractor.component.name,
         oAuthToken: "mockOAuthToken",
-        temporalAuthToken: "temporalUserId"
+        temporalAuthToken: "temporalUserId",
+        requestTimestamp: "2017-06-24T16:00:18Z"
       });
       done()
     });

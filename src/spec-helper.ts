@@ -1,8 +1,8 @@
 import { Component } from "inversify-components";
+import { AlexaHandle } from "./components/alexa/handle";
+import { ExtractionInterface, HandlerInterface } from "./components/alexa/public-interfaces";
 import { SpecSetup, PlatformSpecHelper, RequestContext, intent, } from "assistant-source";
 
-import { ExtractionInterface, HandlerInterface } from "./components/alexa/public-interfaces";
-import { AlexaHandle } from "./components/alexa/handle";
 
 export class SpecHelper implements PlatformSpecHelper {
   specSetup: SpecSetup
@@ -18,7 +18,8 @@ export class SpecHelper implements PlatformSpecHelper {
       sessionID: "alexa-mock-session-id",
       language: "en",
       oAuthToken: "alexa-mock-oauth-token",
-      temporalAuthToken: "alexa-mock-temp-auth-token"
+      temporalAuthToken: "alexa-mock-temp-auth-token",
+      requestTimestamp: "2017-06-24T16:00:18Z"
     }, additionalExtractions);
 
     let context: RequestContext = Object.assign({
