@@ -69,7 +69,7 @@ describe("RequestExtractor", function() {
     it("returns correct extraction", async function(done) {
       this.extraction = await extractor.extract(context);
       expect(this.extraction).toEqual({
-        sessionID: "alexa-SessionId.d391741c-a96f-4393-b7b4-ee76c81c24d3",
+        sessionID: "SessionId.d391741c-a96f-4393-b7b4-ee76c81c24d3",
         intent: "test",
         entities: { entity1: "entityvalue" },
         language: "en",
