@@ -1,6 +1,6 @@
+import { AbstractResponseHandler, RequestContext, ResponseHandlerExtensions } from "assistant-source";
 import { inject, injectable } from "inversify";
 import { ExecutableExtension } from "inversify-components";
-import { AbstractResponseHandler, RequestContext, ResponseHandlerExtensions } from "assistant-source"
 import { askInterfaces, HandlerInterface } from "./public-interfaces";
 
 @injectable()
