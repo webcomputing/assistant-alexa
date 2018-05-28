@@ -71,7 +71,7 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
     return new Promise((resolve, reject) => {
       let user = this.getUser(context);
       let resolvedContext: ExtractionInterface = {
-        sessionID: this.getSessionID(context),
+        sessionID: `alexa-${this.getSessionID(context)}`,
         intent: this.getIntent(context),
         entities: this.getEntities(context),
         language: this.getLanguage(context),
