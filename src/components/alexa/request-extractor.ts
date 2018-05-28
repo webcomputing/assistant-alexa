@@ -121,7 +121,7 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
   }
 
   private getSessionID(context: AlexaRequestContext) {
-    return "alexa-" + context.body.session.sessionId;
+    return context.body.session.sessionId;
   }
 
   private getIntent(context: AlexaRequestContext): intent {
