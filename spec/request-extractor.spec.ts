@@ -27,7 +27,10 @@ describe("RequestExtractor", function() {
       });
 
       it("throws error", function() {
-        return extractor.fits(context).then(result => fail()).catch(result => expect(true).toBeTruthy());
+        return extractor
+          .fits(context)
+          .then(result => fail())
+          .catch(result => expect(true).toBeTruthy());
       });
     });
 
@@ -42,7 +45,7 @@ describe("RequestExtractor", function() {
           return extractor.fits(context).then(result => expect(result).toBeFalsy());
         });
       });
-    })
+    });
 
     describe("with wrong path", function() {
       beforeEach(function() {
@@ -76,9 +79,9 @@ describe("RequestExtractor", function() {
         platform: extractor.component.name,
         oAuthToken: "mockOAuthToken",
         temporalAuthToken: "temporalUserId",
-        requestTimestamp: "2017-06-24T16:00:18Z"
+        requestTimestamp: "2017-06-24T16:00:18Z",
       });
-      done()
+      done();
     });
 
     describe("with FORCED_ALEXA_OAUTH_TOKEN environment variable given", function() {

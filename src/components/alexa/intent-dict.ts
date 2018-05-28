@@ -9,12 +9,12 @@ let swap = function(json) {
   return ret;
 };
 
-export const amazonToGenericIntent: {[name: string]: GenericIntent} = {
+export const amazonToGenericIntent: { [name: string]: GenericIntent } = {
   "AMAZON.YesIntent": GenericIntent.Yes,
   "AMAZON.NoIntent": GenericIntent.No,
   "AMAZON.HelpIntent": GenericIntent.Help,
   "AMAZON.CancelIntent": GenericIntent.Cancel,
-  "AMAZON.StopIntent": GenericIntent.Stop
+  "AMAZON.StopIntent": GenericIntent.Stop,
 };
 
-export const genericIntentToAmazon: {[intent: number]: string} = swap(amazonToGenericIntent);
+export const genericIntentToAmazon: { [intent: number]: string } = swap(amazonToGenericIntent);

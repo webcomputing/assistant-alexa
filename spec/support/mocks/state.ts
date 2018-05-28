@@ -1,5 +1,5 @@
-import { State, ResponseFactory } from "assistant-source";
-import { injectable, inject } from "inversify";
+import { ResponseFactory, State } from "assistant-source";
+import { inject, injectable } from "inversify";
 
 @injectable()
 export class MainState implements State.Required {
@@ -10,11 +10,18 @@ export class MainState implements State.Required {
   }
 
   imageCardIntent() {
-    this.responseFactory.createCardResponse().setTitle("My title").setBody("My body").setImage("My image");
+    this.responseFactory
+      .createCardResponse()
+      .setTitle("My title")
+      .setBody("My body")
+      .setImage("My image");
   }
 
   standardCardIntent() {
-    this.responseFactory.createCardResponse().setTitle("My title").setBody("My body");
+    this.responseFactory
+      .createCardResponse()
+      .setTitle("My title")
+      .setBody("My body");
   }
 
   unhandledGenericIntent() {
