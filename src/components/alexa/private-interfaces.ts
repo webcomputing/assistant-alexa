@@ -1,4 +1,10 @@
-import { MinimalRequestExtraction, OptionalExtractions, OptionalHandlerFeatures, MinimalResponseHandler, RequestContext } from "assistant-source";
+import {
+  MinimalRequestExtraction,
+  MinimalResponseHandler,
+  OptionalExtractions,
+  OptionalHandlerFeatures,
+  RequestContext
+  } from "assistant-source";
 import * as askInterfaces from "./skill-kit-interfaces";
 
 export namespace Configuration {
@@ -21,7 +27,7 @@ export namespace Configuration {
   }
 
   /** Available configuration settings in a runtime application */
-  export interface Runtime extends Defaults, Required {};
+  export interface Runtime extends Defaults, Required {}
 }
 
 /** Name of current component */

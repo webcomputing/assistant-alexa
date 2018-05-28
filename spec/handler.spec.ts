@@ -5,7 +5,7 @@ describe("Handler", function() {
 
   beforeEach(function() {
     alexaHelper = new SpecHelper(this.specHelper);
-  })
+  });
 
   it("sets an image card correctly", function() {
     return alexaHelper.pretendIntentCalled("imageCard").then(handler => {

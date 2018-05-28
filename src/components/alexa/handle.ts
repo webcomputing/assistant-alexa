@@ -1,6 +1,6 @@
+import { AbstractResponseHandler, RequestContext, ResponseHandlerExtensions } from "assistant-source";
 import { inject, injectable } from "inversify";
 import { ExecutableExtension } from "inversify-components";
-import { AbstractResponseHandler, RequestContext, ResponseHandlerExtensions } from "assistant-source"
 import { askInterfaces, HandlerInterface } from "./public-interfaces";
 
 @injectable()
@@ -13,7 +13,7 @@ export class AlexaHandle extends AbstractResponseHandler implements HandlerInter
   cardTitle: string | null = null;
   cardBody: string | null = null;
   cardImage: string | null = null;
-  
+
   constructor(
     @inject("core:root:current-request-context") extraction: RequestContext,
     @inject("core:unifier:current-kill-session-promise") killSession: () => Promise<void>,
@@ -28,7 +28,7 @@ export class AlexaHandle extends AbstractResponseHandler implements HandlerInter
     // Set cards
     if (this.forceAuthenticated) {
       response.response.card = this.createLinkAccountCard();
-    } else if(this.cardTitle !== null) {
+    } else if (this.cardTitle !== null) {
       response.response.card = this.createCard();
     }
 
@@ -39,9 +39,9 @@ export class AlexaHandle extends AbstractResponseHandler implements HandlerInter
 
     // Add reprompt
     if (this.reprompts !== null && this.reprompts.length > 0) {
-      response.response.reprompt = { "outputSpeech": this.getSpeechBody(this.reprompts[0]) };
+      response.response.reprompt = { outputSpeech: this.getSpeechBody(this.reprompts[0]) };
     }
-    
+
     return response;
   }
 
@@ -50,15 +50,14 @@ export class AlexaHandle extends AbstractResponseHandler implements HandlerInter
   }
 
   createCard(): askInterfaces.Card {
-    if (this.cardTitle === null || this.cardBody === null)
-      throw new Error("cardTitle and cardBody must not be null!");
+    if (this.cardTitle === null || this.cardBody === null) throw new Error("cardTitle and cardBody must not be null!");
 
     if (this.cardImage === null) {
       return {
         type: askInterfaces.CardType.Simple,
         title: this.cardTitle,
-        content: this.cardBody
-      }
+        content: this.cardBody,
+      };
     } else {
       return {
         type: askInterfaces.CardType.Standard,
@@ -67,9 +66,9 @@ export class AlexaHandle extends AbstractResponseHandler implements HandlerInter
         image: {
           // TODO
           smallImageUrl: this.cardImage,
-          largeImageUrl: this.cardImage  
-        }
-      }
+          largeImageUrl: this.cardImage,
+        },
+      };
     }
   }
 
@@ -77,8 +76,8 @@ export class AlexaHandle extends AbstractResponseHandler implements HandlerInter
     return {
       version: "1.0",
       response: {
-        shouldEndSession: this.endSession
-      }
+        shouldEndSession: this.endSession,
+      },
     };
   }
 
@@ -88,13 +87,13 @@ export class AlexaHandle extends AbstractResponseHandler implements HandlerInter
     if (this.isSSML) {
       return {
         type: "SSML",
-        ssml: voiceMessage
+        ssml: voiceMessage,
       };
     } else {
       return {
         type: "PlainText",
-        text: voiceMessage
-      }
-    };
+        text: voiceMessage,
+      };
+    }
   }
 }
