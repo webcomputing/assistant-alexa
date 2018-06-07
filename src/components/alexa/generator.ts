@@ -1,10 +1,9 @@
-import { injectable, inject } from "inversify";
-import { Component } from "inversify-components";
+import { GenericIntent, PlatformGenerator } from "assistant-source";
 import * as fs from "fs";
-import { PlatformGenerator, GenericIntent } from "assistant-source";
-
-import { Configuration } from "./private-interfaces";
+import { inject, injectable } from "inversify";
+import { Component } from "inversify-components";
 import { genericIntentToAmazon } from "./intent-dict";
+import { Configuration } from "./private-interfaces";
 
 @injectable()
 export class AlexaGenerator implements PlatformGenerator.Extension {
@@ -36,7 +35,7 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
   /** Returns Intent Schema for Amazon Alexa Config
    * @param preparedIntentConfiguration: Result of prepareConfiguration()
    */
-  buildIntentSchema(preparedIntentConfiguration: PreparedIntentConfiguration[], parameterMapping: unifierInterfaces.GeneratorEntityMapping): IntentSchema[] {
+  buildIntentSchema(preparedIntentConfiguration: PreparedIntentConfiguration[], parameterMapping: PlatformGenerator.EntityMapping): IntentSchema[] {
     return preparedIntentConfiguration.map(config => {
       let slots = this.makeSlots(config.entities, parameterMapping);
       return {
@@ -63,7 +62,7 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
   /** Returns BuildIntentConfiguration[] but with all unspeakable intents filtered out, and all other GenericIntents converted to amazon specific strings */
   prepareConfiguration(intentConfigurations: PlatformGenerator.IntentConfiguration[]): PreparedIntentConfiguration[] {
     // Leave out unspeakable intents
-    let withoutUnspeakable = intentConfigurations.filter(config => typeof (config.intent) === "string" || unifierInterfaces.GenericIntent.isSpeakable(config.intent));
+    let withoutUnspeakable = intentConfigurations.filter(config => typeof (config.intent) === "string" || GenericIntent.isSpeakable(config.intent));
 
     // Leave out all non-platform intents without utterances, but tell user about this
     let withoutUndefinedUtterances: PlatformGenerator.IntentConfiguration[] = [];
@@ -95,10 +94,10 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
     return parameters.map(name => {
       let config = this.component.configuration;
 
-      if (typeof (config.parameters) === "undefined" || typeof (config.parameters[parameterMapping[name]]) === "undefined")
+      if (typeof (config.entities) === "undefined" || typeof (config.entities[parameterMapping[name]]) === "undefined")
         throw Error("Missing amazon configured type for parameter '" + name + "'");
 
-      return { name: name, type: config.parameters[parameterMapping[name]] };
+      return { name: name, type: config.entities[parameterMapping[name]] };
     });
   }
 }
