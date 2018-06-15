@@ -1,4 +1,4 @@
-import { GenericIntent, PlatformGenerator, unifierInterfaces } from "assistant-source";
+import { GenericIntent, PlatformGenerator } from "assistant-source";
 import * as fs from "fs";
 import { inject, injectable } from "inversify";
 import { Component } from "inversify-components";
@@ -40,7 +40,7 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
   /** Returns Intent Schema for Amazon Alexa Config
    * @param preparedIntentConfiguration: Result of prepareConfiguration()
    */
-  buildIntentSchema(preparedIntentConfiguration: PreparedIntentConfiguration[], parameterMapping: unifierInterfaces.PlatformGenerator.EntityMapping): IntentSchema[] {
+  buildIntentSchema(preparedIntentConfiguration: PreparedIntentConfiguration[], parameterMapping: PlatformGenerator.EntityMapping): IntentSchema[] {
     return preparedIntentConfiguration.map(config => {
       let slots = this.makeSlots(config.entities, parameterMapping);
       return {
@@ -67,7 +67,7 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
   /** Returns BuildIntentConfiguration[] but with all unspeakable intents filtered out, and all other GenericIntents converted to amazon specific strings */
   prepareConfiguration(intentConfigurations: PlatformGenerator.IntentConfiguration[]): PreparedIntentConfiguration[] {
     // Leave out unspeakable intents
-    let withoutUnspeakable = intentConfigurations.filter(config => typeof (config.intent) === "string" || unifierInterfaces.GenericIntent.isSpeakable(config.intent));
+    let withoutUnspeakable = intentConfigurations.filter(config => typeof (config.intent) === "string" || GenericIntent.isSpeakable(config.intent));
 
     // Leave out all non-platform intents without utterances, but tell user about this
     let withoutUndefinedUtterances: PlatformGenerator.IntentConfiguration[] = [];
