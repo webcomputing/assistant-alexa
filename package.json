@@ -10,7 +10,7 @@
     "AssistantJS"
   ],
   "peerDependencies": {
-    "assistant-source": "^0.3.0"
+    "assistant-source": "^0.3.2"
   },
   "devDependencies": {
     "@types/jasmine": "^2.5.48",
