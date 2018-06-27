@@ -5,7 +5,6 @@ import { Component } from "inversify-components";
 import { genericIntentToAmazon } from "./intent-dict";
 import { Configuration } from "./private-interfaces";
 
-
 @injectable()
 export class AlexaGenerator implements PlatformGenerator.Extension {
   @inject("meta:component//alexa") private component: Component<Configuration.Runtime>;
@@ -55,8 +54,8 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
   buildFullSchema(intentSchemas: IntentSchema[]): FullAlexaSchema {
     let invocationName: string = this.component.configuration.invocationName;
     /** Validate invocationName characters */
-    if(!invocationName.match(/^[a-z][a-z\s\.']*$/)) {
-      invocationName = "----INSERT_YOUR_INVOCATION_NAME_HERE----";
+    if (!invocationName.match(/^[a-z][a-z\s\.']*$/)) {
+      invocationName = "setup-your-invocation-name-in-config";
       console.warn("Invocation name must start with a letter and can only contain lower case letters, spaces, apostrophes, and periods. Omitting..");
     }
 
@@ -98,9 +97,9 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
     if (preparedSet.length !== withoutUndefinedUtterances.length)
       console.warn(
         "Could not convert all intents, missing " +
-          (withoutUndefinedUtterances.length - preparedSet.length) +
-          " intents. " +
-          "Possibly some platform intents are not implemented into the alexa platform yet. Omitting them."
+        (withoutUndefinedUtterances.length - preparedSet.length) +
+        " intents. " +
+        "Possibly some platform intents are not implemented into the alexa platform yet. Omitting them."
       );
 
     return preparedSet;
