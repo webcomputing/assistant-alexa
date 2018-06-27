@@ -1,9 +1,15 @@
+version 0.3.1
+- updates build schema to latest version
+
 version 0.3.0
 - makes assistant-alexa compatible with assistant-source 0.3.0
 - removes deprecated interface names (rootInterfaces, ...)
 - changes configuration interfaces to new assistantjs 0.3.0 format
 - changes logger dependency to bunyan, adds component-specific logging
 - renames "parameters" to "entities" in configuration
+
+version 0.2.1
+- updates alexa generator to new format
 
 version 0.2.0
 - adds reprompts, applies changes of new assistantjs version
