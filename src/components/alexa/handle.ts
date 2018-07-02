@@ -1,6 +1,5 @@
-import { AbstractResponseHandler, RequestContext, ResponseHandlerExtensions } from "assistant-source";
+import { AbstractResponseHandler, injectionNames, RequestContext, ResponseHandlerExtensions } from "assistant-source";
 import { inject, injectable } from "inversify";
-import { ExecutableExtension } from "inversify-components";
 import { askInterfaces, HandlerInterface } from "./public-interfaces";
 
 @injectable()
@@ -17,9 +16,9 @@ export class AlexaHandle extends AbstractResponseHandler implements HandlerInter
   sessionData: string | null = null;
 
   constructor(
-    @inject("core:root:current-request-context") extraction: RequestContext,
-    @inject("core:unifier:current-kill-session-promise") killSession: () => Promise<void>,
-    @inject("core:unifier:response-handler-extensions") responseHandlerExtensions: ResponseHandlerExtensions
+    @inject(injectionNames.current.requestContext) extraction: RequestContext,
+    @inject(injectionNames.current.killSessionService) killSession: () => Promise<void>,
+    @inject(injectionNames.current.responseHandlerExtensions) responseHandlerExtensions: ResponseHandlerExtensions
   ) {
     super(extraction, killSession, responseHandlerExtensions);
   }
