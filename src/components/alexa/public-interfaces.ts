@@ -18,11 +18,13 @@ export interface AlexaConfigurationAttribute {
 
 export interface ExtractionInterface
   extends MinimalRequestExtraction,
+    OptionalExtractions.SessionData,
     OptionalExtractions.TemporalAuth,
     OptionalExtractions.Timestamp,
     OptionalExtractions.OAuth {}
 export interface HandlerInterface
   extends MinimalResponseHandler,
+    OptionalHandlerFeatures.SessionData,
     OptionalHandlerFeatures.Reprompt,
     OptionalHandlerFeatures.GUI.Card.Simple,
     OptionalHandlerFeatures.GUI.Card.Image,

@@ -14,6 +14,8 @@ export class AlexaHandle extends AbstractResponseHandler implements HandlerInter
   cardBody: string | null = null;
   cardImage: string | null = null;
 
+  sessionData: string | null = null;
+
   constructor(
     @inject("core:root:current-request-context") extraction: RequestContext,
     @inject("core:unifier:current-kill-session-promise") killSession: () => Promise<void>,
@@ -73,12 +75,23 @@ export class AlexaHandle extends AbstractResponseHandler implements HandlerInter
   }
 
   private getBaseBody(): askInterfaces.ResponseBody {
-    return {
+    const base = {
       version: "1.0",
       response: {
         shouldEndSession: this.endSession,
-      },
-    };
+      },};
+
+    if(this.sessionData !== null) {  
+      const attributes: {[k: string]: string} = {};
+      const keyValuePairs: string[][] = this.sessionData.split(",").map(pair => pair.split(":"));
+      keyValuePairs.forEach(([key, value]) => {
+        attributes[key] = value;
+      });
+
+      return {sessionAttributes: attributes, ...base};
+    }
+
+    return base;
   }
 
   private getSpeechBody(voiceMessage = this.voiceMessage): askInterfaces.OutputSpeech {
