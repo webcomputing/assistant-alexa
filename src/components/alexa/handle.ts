@@ -24,6 +24,7 @@ export class AlexaHandle extends AbstractResponseHandler implements HandlerInter
   }
 
   getBody(): askInterfaces.ResponseBody {
+    // Add base body
     let response = this.getBaseBody();
 
     // Set cards
@@ -78,19 +79,10 @@ export class AlexaHandle extends AbstractResponseHandler implements HandlerInter
       version: "1.0",
       response: {
         shouldEndSession: this.endSession,
-      },};
-
-    if(this.sessionData !== null) {  
-      const attributes: {[k: string]: string} = {};
-      const keyValuePairs: string[][] = this.sessionData.split(",").map(pair => pair.split(":"));
-      keyValuePairs.forEach(([key, value]) => {
-        attributes[key] = value;
-      });
-
-      return {sessionAttributes: attributes, ...base};
-    }
-
-    return base;
+      },
+    };
+    // Merge sessionAttributes in base body when sessionData is not null
+    return (this.sessionData ? {sessionAttributes: JSON.parse(this.sessionData), ...base} : base);
   }
 
   private getSpeechBody(voiceMessage = this.voiceMessage): askInterfaces.OutputSpeech {

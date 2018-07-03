@@ -194,7 +194,7 @@ export interface ResponseBody {
   /** A map of key-value pairs to persist in the session.
    * The key is a string that represents the name of the attribute. Type: string.
    * The value is an object that represents the value of the attribute. Type: object. */
-  sessionAttributes?: {[k: string]: string};
+  sessionAttributes?: {[k: string]: any};
   /**
    * A response object that defines what to render to the user and whether to end the current session.
    * @see Response
