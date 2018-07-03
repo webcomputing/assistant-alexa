@@ -73,6 +73,7 @@ describe("RequestExtractor", function() {
       this.extraction = await extractor.extract(context);
       expect(this.extraction).toEqual({
         sessionID: "SessionId.d391741c-a96f-4393-b7b4-ee76c81c24d3",
+        sessionData: { sessionKey: "mock-sessionKey"},
         intent: "test",
         entities: { entity1: "entityvalue" },
         language: "en",
