@@ -82,7 +82,7 @@ export class AlexaHandle extends AbstractResponseHandler implements HandlerInter
       },
     };
     // Merge sessionAttributes in base body when sessionData is not null
-    return (this.sessionData ? {sessionAttributes: JSON.parse(this.sessionData), ...base} : base);
+    return (this.sessionData ? {sessionAttributes: { sessionKey: this.sessionData } , ...base} : base);
   }
 
   private getSpeechBody(voiceMessage = this.voiceMessage): askInterfaces.OutputSpeech {

@@ -100,9 +100,8 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
   }
 
   private getSessionData(context: AlexaRequestContext): string | null {
-    console.log("Request Session Attributes: ", context.body.session.attributes);
     if(typeof context.body.session.attributes !== "undefined") {
-      return JSON.stringify(context.body.session.attributes);
+      return context.body.session.attributes.sessionKey;
     }
     return null;
   }

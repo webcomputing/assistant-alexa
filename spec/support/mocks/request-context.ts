@@ -16,7 +16,9 @@ export const validRequestContext = {
       new: false,
       sessionId: "SessionId.d391741c-a96f-4393-b7b4-ee76c81c24d3",
       application: { applicationId: "mock-applicationId" },
-      attributes: { sessionKey: "mock-sessionKey"},
+      attributes: {
+        "sessionKey": "{\"mockAttribute\":\"mockValue\",\"__current_state\":\"mockState\"}"
+      },
       user: {
         userId: "temporalUserId",
         permissions: {
