@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "@types/jasmine": "^2.5.48",
-    "assistant-source": "^0.4.0",
+    "assistant-source": "internal",
     "gulp": "^3.9.1",
     "gulp-sourcemaps": "^2.6.0",
     "gulp-tslint": "^8.1.0",
