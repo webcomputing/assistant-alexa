@@ -22,7 +22,7 @@
     "jasmine-ts": "^0.1.3",
     "reflect-metadata": "^0.1.10",
     "tslint": "^5.4.0",
-    "typescript": "2.3.4"
+    "typescript": "^2.9.2"
   },
   "homepage": "http://www.assistantjs.org",
   "bugs": "https://github.com/webcomputing/assistant-alexa/issues",
