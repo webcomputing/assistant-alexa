@@ -58,6 +58,7 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
       let user = this.getUser(context);
       let resolvedContext: ExtractionInterface = {
         sessionID: this.getSessionID(context),
+        sessionData: this.getSessionData(context),
         intent: this.getIntent(context),
         entities: this.getEntities(context),
         language: this.getLanguage(context),
@@ -96,6 +97,13 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
 
   private getSessionID(context: AlexaRequestContext) {
     return context.body.session.sessionId;
+  }
+
+  private getSessionData(context: AlexaRequestContext): string | null {
+    if(typeof context.body.session.attributes !== "undefined") {
+      return context.body.session.attributes.sessionKey;
+    }
+    return null;
   }
 
   private getIntent(context: AlexaRequestContext): intent {

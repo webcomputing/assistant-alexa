@@ -24,7 +24,7 @@ export class MainState implements State.Required {
       .setBody("My body");
   }
 
-  unhandledGenericIntent() {
+  async unhandledGenericIntent() {
     this.responseFactory.createSimpleVoiceResponse().endSessionWith("Hello from alexa!");
   }
 

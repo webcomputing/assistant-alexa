@@ -1,6 +1,5 @@
-import { AbstractResponseHandler, RequestContext, ResponseHandlerExtensions } from "assistant-source";
+import { AbstractResponseHandler, injectionNames, RequestContext, ResponseHandlerExtensions } from "assistant-source";
 import { inject, injectable } from "inversify";
-import { ExecutableExtension } from "inversify-components";
 import { askInterfaces, HandlerInterface } from "./public-interfaces";
 
 @injectable()
@@ -14,15 +13,18 @@ export class AlexaHandle extends AbstractResponseHandler implements HandlerInter
   cardBody: string | null = null;
   cardImage: string | null = null;
 
+  sessionData: string | null = null;
+
   constructor(
-    @inject("core:root:current-request-context") extraction: RequestContext,
-    @inject("core:unifier:current-kill-session-promise") killSession: () => Promise<void>,
-    @inject("core:unifier:response-handler-extensions") responseHandlerExtensions: ResponseHandlerExtensions
+    @inject(injectionNames.current.requestContext) extraction: RequestContext,
+    @inject(injectionNames.current.killSessionService) killSession: () => Promise<void>,
+    @inject(injectionNames.current.responseHandlerExtensions) responseHandlerExtensions: ResponseHandlerExtensions
   ) {
     super(extraction, killSession, responseHandlerExtensions);
   }
 
   getBody(): askInterfaces.ResponseBody {
+    // Add base body
     let response = this.getBaseBody();
 
     // Set cards
@@ -73,12 +75,14 @@ export class AlexaHandle extends AbstractResponseHandler implements HandlerInter
   }
 
   private getBaseBody(): askInterfaces.ResponseBody {
-    return {
+    const base = {
       version: "1.0",
       response: {
         shouldEndSession: this.endSession,
       },
     };
+    // Merge sessionAttributes in base body when sessionData is not null
+    return (this.sessionData ? {sessionAttributes: { sessionKey: this.sessionData } , ...base} : base);
   }
 
   private getSpeechBody(voiceMessage = this.voiceMessage): askInterfaces.OutputSpeech {

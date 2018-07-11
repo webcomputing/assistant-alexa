@@ -25,6 +25,7 @@ export class SpecHelper implements PlatformSpecHelper {
         oAuthToken: "alexa-mock-oauth-token",
         temporalAuthToken: "alexa-mock-temp-auth-token",
         requestTimestamp: "2017-06-24T16:00:18Z",
+        sessionData: "{\"alexa-mock-first-session-attribute\": \"first-session-attribute\",\"alexa-mock-second-session-attribute\": \"second-session-attribute\"}"
       },
       additionalExtractions
     );
