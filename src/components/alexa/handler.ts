@@ -2,7 +2,6 @@ import {
   AuthenticationMixin,
   BasicHandler,
   CardMixin,
-  ChatBubblesMixin,
   injectionNames,
   MinimalRequestExtraction,
   RepromptsMixin,
@@ -15,7 +14,7 @@ import { AlexaSpecificHandable, AlexaSpecificTypes, askInterfaces } from "./publ
 
 @injectable()
 export class AlexaHandler<CustomTypes extends AlexaSpecificTypes>
-  extends AuthenticationMixin(CardMixin(ChatBubblesMixin(RepromptsMixin(SessionDataMixin(BasicHandler)))))<CustomTypes>
+  extends AuthenticationMixin(CardMixin(RepromptsMixin(SessionDataMixin(BasicHandler))))<CustomTypes>
   implements AlexaSpecificHandable<CustomTypes> {
   constructor(
     @inject(injectionNames.current.requestContext) requestContext: RequestContext,
