@@ -5,7 +5,7 @@ let configuration = require("../support/mocks/configuration").configuration;
 let mainState = require("../support/mocks/state").MainState;
 
 beforeEach(function() {
-  this.specHelper = new assistantJsCore.SpecSetup();
+  this.specHelper = new assistantJsCore.SpecHelper();
 
   // Bind and configure alexa extension
   this.specHelper.setup.registerComponent(ownDescriptor);

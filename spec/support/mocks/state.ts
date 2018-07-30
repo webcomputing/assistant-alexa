@@ -1,34 +1,25 @@
-import { ResponseFactory, State } from "assistant-source";
+import { injectionNames, State } from "assistant-source";
 import { inject, injectable } from "inversify";
+import { AlexaSpecificTypes } from "../../../src/assistant-alexa";
+import { AlexaHandler } from "../../../src/components/alexa/handler";
 
 @injectable()
 export class MainState implements State.Required {
-  responseFactory: ResponseFactory;
+  constructor(@inject(injectionNames.current.responseHandler) private handler: AlexaHandler<AlexaSpecificTypes>) {}
 
-  constructor(@inject("core:unifier:current-response-factory") factory: ResponseFactory) {
-    this.responseFactory = factory;
+  public imageCardIntent() {
+    this.handler.setCard({ title: "My title", description: "My body", cardImage: "My image" });
   }
 
-  imageCardIntent() {
-    this.responseFactory
-      .createCardResponse()
-      .setTitle("My title")
-      .setBody("My body")
-      .setImage("My image");
+  public standardCardIntent() {
+    this.handler.setCard({ title: "My title", description: "My body" });
   }
 
-  standardCardIntent() {
-    this.responseFactory
-      .createCardResponse()
-      .setTitle("My title")
-      .setBody("My body");
+  public async unhandledGenericIntent() {
+    this.handler.endSessionWith("Hello from alexa!");
   }
 
-  async unhandledGenericIntent() {
-    this.responseFactory.createSimpleVoiceResponse().endSessionWith("Hello from alexa!");
-  }
-
-  unansweredGenericIntent() {
-    this.responseFactory.createAndSendEmptyResponse();
+  public unansweredGenericIntent() {
+    this.handler.send();
   }
 }

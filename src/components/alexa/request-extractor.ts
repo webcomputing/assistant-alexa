@@ -1,9 +1,4 @@
 import * as verifyAlexa from "alexa-verifier";
-import { inject, injectable } from "inversify";
-import { Component } from "inversify-components";
-import { amazonToGenericIntent as dictionary } from "./intent-dict";
-import { COMPONENT_NAME, Configuration } from "./private-interfaces";
-import { AlexaRequestContext, askInterfaces, ExtractionInterface } from "./public-interfaces";
 import {
   ComponentSpecificLoggerFactory,
   GenericIntent,
@@ -12,13 +7,18 @@ import {
   Logger,
   RequestExtractor as AssistantJSRequestExtractor,
 } from "assistant-source";
+import { inject, injectable } from "inversify";
+import { Component } from "inversify-components";
+import { amazonToGenericIntent as dictionary } from "./intent-dict";
+import { COMPONENT_NAME, Configuration } from "./private-interfaces";
+import { AlexaRequestContext, askInterfaces, ExtractionInterface } from "./public-interfaces";
 
 @injectable()
 export class RequestExtractor implements AssistantJSRequestExtractor {
   public component: Component<Configuration.Runtime>;
+  public verifyAlexaProxy: any;
   private configuration: Configuration.Runtime;
   private logger: Logger;
-  verifyAlexaProxy: any;
 
   constructor(
     @inject("meta:component//alexa") componentMeta: Component<Configuration.Runtime>,
@@ -30,10 +30,10 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
     this.verifyAlexaProxy = this.resolveVerifier();
   }
 
-  fits(context: AlexaRequestContext): Promise<boolean> {
+  public fits(context: AlexaRequestContext): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       if (this.fitsInternal(context)) {
-        this.verifyAlexaProxy(context.headers["signaturecertchainurl"], context.headers["signature"], JSON.stringify(context.body), error => {
+        this.verifyAlexaProxy(context.headers.signaturecertchainurl, context.headers.signature, JSON.stringify(context.body), error => {
           if (error) {
             this.logger.error(
               { requestId: context.id },
@@ -53,10 +53,10 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
     });
   }
 
-  extract(context: AlexaRequestContext): Promise<ExtractionInterface> {
+  public extract(context: AlexaRequestContext): Promise<ExtractionInterface> {
     return new Promise((resolve, reject) => {
-      let user = this.getUser(context);
-      let resolvedContext: ExtractionInterface = {
+      const user = this.getUser(context);
+      const resolvedContext: ExtractionInterface = {
         sessionID: this.getSessionID(context),
         sessionData: this.getSessionData(context),
         intent: this.getIntent(context),
@@ -71,11 +71,11 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
     });
   }
 
-  getTemporalAuth(context: AlexaRequestContext): string {
+  public getTemporalAuth(context: AlexaRequestContext): string {
     return context.body.session.user.userId;
   }
 
-  resolveVerifier() {
+  public resolveVerifier() {
     if (this.configuration.useVerifier === false) {
       this.logger.warn("Using proxy verifier instead of alexa-verify. Hope you know what you are doing.");
       return (chainurl, signature, body, callback: (error) => any) => {
@@ -100,32 +100,33 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
   }
 
   private getSessionData(context: AlexaRequestContext): string | null {
-    if(typeof context.body.session.attributes !== "undefined") {
+    if (typeof context.body.session.attributes !== "undefined") {
       return context.body.session.attributes.sessionKey;
     }
     return null;
   }
 
   private getIntent(context: AlexaRequestContext): intent {
-    let genericIntent = this.getGenericIntent(context);
+    const genericIntent = this.getGenericIntent(context);
     if (genericIntent !== null) return genericIntent;
 
     return (context.body.request as askInterfaces.IntentRequest).intent.name;
   }
 
   private getEntities(context: AlexaRequestContext) {
-    let request = context.body.request as askInterfaces.IntentRequest;
+    const request = context.body.request as askInterfaces.IntentRequest;
     if (typeof request.intent !== "undefined") {
       if (typeof request.intent.slots !== "undefined") {
-        let result = {};
+        const result = {};
         Object.keys(request.intent.slots).forEach(slotName => {
           if (
             typeof request.intent.slots[slotName].value !== "undefined" &&
             request.intent.slots[slotName].value !== "?" &&
             request.intent.slots[slotName].value !== null &&
             request.intent.slots[slotName].value !== "null"
-          )
+          ) {
             result[slotName] = request.intent.slots[slotName].value;
+          }
         });
         return result;
       }
@@ -159,12 +160,12 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
       case askInterfaces.RequestType.SessionEndedRequest:
         return GenericIntent.Unanswered;
       default:
-        let intentRequest = context.body.request as askInterfaces.IntentRequest;
+        const intentRequest = context.body.request as askInterfaces.IntentRequest;
         return RequestExtractor.makeIntentStringToGenericIntent(intentRequest.intent.name);
     }
   }
 
-  static makeIntentStringToGenericIntent(intent: string): GenericIntent | null {
+  public static makeIntentStringToGenericIntent(intent: string): GenericIntent | null {
     return dictionary.hasOwnProperty(intent) ? dictionary[intent] : null;
   }
 }

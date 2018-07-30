@@ -1,10 +1,4 @@
-import {
-  MinimalRequestExtraction,
-  MinimalResponseHandler,
-  OptionalExtractions,
-  OptionalHandlerFeatures,
-  RequestContext
-  } from "assistant-source";
+import { BasicAnswerTypes, BasicHandable, MinimalRequestExtraction, OptionalExtractions, RequestContext } from "assistant-source";
 import { Configuration } from "./private-interfaces";
 import * as askInterfaces from "./skill-kit-interfaces";
 
@@ -22,14 +16,16 @@ export interface ExtractionInterface
     OptionalExtractions.TemporalAuth,
     OptionalExtractions.Timestamp,
     OptionalExtractions.OAuth {}
-export interface HandlerInterface
-  extends MinimalResponseHandler,
-    OptionalHandlerFeatures.SessionData,
-    OptionalHandlerFeatures.Reprompt,
-    OptionalHandlerFeatures.GUI.Card.Simple,
-    OptionalHandlerFeatures.GUI.Card.Image,
-    OptionalHandlerFeatures.Authentication,
-    OptionalHandlerFeatures.SSML {}
+
+/**
+ * Add custom types here
+ */
+export interface AlexaSpecificTypes extends BasicAnswerTypes {}
+
+/**
+ * Add custom methods for here
+ */
+export interface AlexaSpecificHandable<CustomTypes extends AlexaSpecificTypes> extends BasicHandable<CustomTypes> {}
 
 export interface AlexaRequestContext extends RequestContext {
   body: askInterfaces.RequestBody;
