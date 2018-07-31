@@ -1,6 +1,6 @@
+import * as askInterfaces from "ask-sdk-model";
 import { BasicAnswerTypes, BasicHandable, MinimalRequestExtraction, OptionalExtractions, RequestContext } from "assistant-source";
 import { Configuration } from "./private-interfaces";
-import * as askInterfaces from "./skill-kit-interfaces";
 
 /** Configuration of alexa component */
 export interface AlexaConfiguration extends Partial<Configuration.Defaults>, Configuration.Required {}
@@ -28,7 +28,7 @@ export interface AlexaSpecificTypes extends BasicAnswerTypes {}
 export interface AlexaSpecificHandable<CustomTypes extends AlexaSpecificTypes> extends BasicHandable<CustomTypes> {}
 
 export interface AlexaRequestContext extends RequestContext {
-  body: askInterfaces.RequestBody;
+  body: askInterfaces.RequestEnvelope;
 }
 
 export { askInterfaces };

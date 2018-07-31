@@ -71,8 +71,8 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
     });
   }
 
-  public getTemporalAuth(context: AlexaRequestContext): string {
-    return context.body.session.user.userId;
+  public getTemporalAuth(context: AlexaRequestContext): string | null {
+    return context.body.session ? context.body.session.user.userId : null;
   }
 
   public resolveVerifier() {
@@ -95,12 +95,12 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
     return context.path === this.configuration.route && context.body.session.application.applicationId === this.configuration.applicationID;
   }
 
-  private getSessionID(context: AlexaRequestContext) {
-    return context.body.session.sessionId;
+  private getSessionID(context: AlexaRequestContext): string {
+    return context.body.session!.sessionId;
   }
 
   private getSessionData(context: AlexaRequestContext): string | null {
-    if (typeof context.body.session.attributes !== "undefined") {
+    if (context.body.session && typeof context.body.session.attributes !== "undefined") {
       return context.body.session.attributes.sessionKey;
     }
     return null;
@@ -120,12 +120,12 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
         const result = {};
         Object.keys(request.intent.slots).forEach(slotName => {
           if (
-            typeof request.intent.slots[slotName].value !== "undefined" &&
-            request.intent.slots[slotName].value !== "?" &&
-            request.intent.slots[slotName].value !== null &&
-            request.intent.slots[slotName].value !== "null"
+            typeof request.intent.slots![slotName].value !== "undefined" &&
+            request.intent.slots![slotName].value !== "?" &&
+            request.intent.slots![slotName].value !== null &&
+            request.intent.slots![slotName].value !== "null"
           ) {
-            result[slotName] = request.intent.slots[slotName].value;
+            result[slotName] = request.intent.slots![slotName].value;
           }
         });
         return result;
@@ -147,17 +147,17 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
     if (typeof process.env.FORCED_ALEXA_OAUTH_TOKEN !== "undefined") {
       this.logger.warn("Using preconfigured mock oauth tocken.");
       return process.env.FORCED_ALEXA_OAUTH_TOKEN;
-    } else {
-      return context.body.session.user.accessToken;
     }
+
+    return context.body.session ? context.body.session.user.accessToken : undefined;
   }
 
   /* Returns GenericIntent if request is a GenericIntent, or null, if not */
   private getGenericIntent(context: AlexaRequestContext): GenericIntent | null {
     switch (context.body.request.type) {
-      case askInterfaces.RequestType.LaunchRequest:
+      case "LaunchRequest":
         return GenericIntent.Invoke;
-      case askInterfaces.RequestType.SessionEndedRequest:
+      case "SessionEndedRequest":
         return GenericIntent.Unanswered;
       default:
         const intentRequest = context.body.request as askInterfaces.IntentRequest;
