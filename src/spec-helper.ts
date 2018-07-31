@@ -11,8 +11,8 @@ export class AlexaSpecHelper implements PlatformSpecHelper<AlexaSpecificTypes, A
 
   public async pretendIntentCalled(intent: intent, autoStart = true, additionalExtractions = {}, additionalContext = {}) {
     const extraction: ExtractionInterface = {
-      platform: "alexa",
       intent,
+      platform: "alexa",
       sessionID: "alexa-mock-session-id",
       language: "en",
       oAuthToken: "alexa-mock-oauth-token",

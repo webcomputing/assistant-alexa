@@ -1,3 +1,4 @@
+import * as askInterfaces from "ask-sdk-model";
 import {
   AuthenticationMixin,
   BasicHandler,
@@ -9,7 +10,6 @@ import {
   ResponseHandlerExtensions,
   SessionDataMixin,
 } from "assistant-source";
-import * as askInterfaces from "ask-sdk-model";
 import { inject, injectable } from "inversify";
 import { AlexaSpecificHandable, AlexaSpecificTypes } from "./public-interfaces";
 
