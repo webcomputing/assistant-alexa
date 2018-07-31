@@ -1,3 +1,7 @@
+version 0.4.0
+- new ResponseHandler for compatibility with AssistantJS 0.4.0
+- Renamed "SpecHelper" to "AlexaSpecHelper"
+
 version 0.3.1
 - updates build schema to latest version
 
