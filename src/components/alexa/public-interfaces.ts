@@ -1,5 +1,5 @@
 import * as askInterfaces from "ask-sdk-model";
-import { BasicAnswerTypes, BasicHandable, MinimalRequestExtraction, OptionalExtractions, RequestContext } from "assistant-source";
+import { BasicAnswerTypes, BasicHandable, MinimalRequestExtraction, OptionalExtractions, OptionallyPromise, RequestContext } from "assistant-source";
 import { Configuration } from "./private-interfaces";
 
 /** Configuration of alexa component */
@@ -18,29 +18,71 @@ export interface ExtractionInterface
     OptionalExtractions.OAuth {}
 
 /**
- * All necessary Properties of a ListTemplate
+ * All types and interfaces for subtypes, so that some properties are not necessary to set
  */
-export type ListProperties = "token" | "backButton" | "backgroundImage" | "title" | "listItems";
+export namespace AlexaSubtypes {
+  export namespace SubtypeProperties {
+    /**
+     * All necessary Properties of a ListTemplate
+     */
+    export type ListProperties = "token" | "backButton" | "backgroundImage" | "title" | "listItems";
 
-/**
- * Minimal Properties of BodyTemplates
- */
-export type BodyDefaultProperties = "token" | "backButton" | "backgroundImage";
+    /**
+     * Minimal Properties of BodyTemplates
+     */
+    export type BodyDefaultProperties = "token" | "backButton" | "backgroundImage";
 
-/**
- * Property when BodyTemplate supports Image
- */
-export type BodyImageProperty = "image";
+    /**
+     * Property when BodyTemplate supports Image
+     */
+    export type BodyImageProperty = "image";
 
-/**
- * Property when BoddyTemplate supports Title
- */
-export type BodyTitleProperty = "title";
+    /**
+     * Property when BodyTemplate supports Title
+     */
+    export type BodyTitleProperty = "title";
 
-/**
- * Property when BoddyTemplate supports TextContent
- */
-export type BodyTextContentProperty = "textContent";
+    /**
+     * Property when BodyTemplate supports TextContent
+     */
+    export type BodyTextContentProperty = "textContent";
+  }
+
+  export type ListTemplate1 = Pick<askInterfaces.interfaces.display.ListTemplate1, SubtypeProperties.ListProperties>;
+
+  export type ListTemplate2 = Pick<askInterfaces.interfaces.display.ListTemplate2, SubtypeProperties.ListProperties>;
+
+  export type BodyTemplate1 = Pick<
+    askInterfaces.interfaces.display.BodyTemplate1,
+    SubtypeProperties.BodyDefaultProperties | SubtypeProperties.BodyTextContentProperty | SubtypeProperties.BodyTitleProperty
+  >;
+
+  export type BodyTemplate2 = Pick<
+    askInterfaces.interfaces.display.BodyTemplate2,
+    | SubtypeProperties.BodyDefaultProperties
+    | SubtypeProperties.BodyTextContentProperty
+    | SubtypeProperties.BodyImageProperty
+    | SubtypeProperties.BodyTitleProperty
+  >;
+
+  export type BodyTemplate3 = Pick<
+    askInterfaces.interfaces.display.BodyTemplate3,
+    | SubtypeProperties.BodyDefaultProperties
+    | SubtypeProperties.BodyTextContentProperty
+    | SubtypeProperties.BodyImageProperty
+    | SubtypeProperties.BodyTitleProperty
+  >;
+
+  export type BodyTemplate6 = Pick<
+    askInterfaces.interfaces.display.BodyTemplate6,
+    SubtypeProperties.BodyDefaultProperties | SubtypeProperties.BodyTextContentProperty | SubtypeProperties.BodyImageProperty
+  >;
+
+  export type BodyTemplate7 = Pick<
+    askInterfaces.interfaces.display.BodyTemplate7,
+    SubtypeProperties.BodyDefaultProperties | SubtypeProperties.BodyTitleProperty | SubtypeProperties.BodyImageProperty
+  >;
+}
 
 /**
  * Add custom types here
@@ -57,50 +99,9 @@ export interface AlexaSpecificTypes extends BasicAnswerTypes {
   alexaHint: askInterfaces.interfaces.display.PlainTextHint;
 
   /**
-   * any full template for display
+   * Only one Template can be set
    */
   alexaTemplate: askInterfaces.interfaces.display.Template;
-
-  /**
-   * ListTemplate1
-   */
-  alexaListTemplate1: Pick<askInterfaces.interfaces.display.ListTemplate1, ListProperties>;
-
-  /**
-   * ListTemplate2
-   */
-  alexaListTemplate2: Pick<askInterfaces.interfaces.display.ListTemplate2, ListProperties>;
-
-  /**
-   * BodyTemplate1
-   */
-  alexaBodyTemplate1: Pick<askInterfaces.interfaces.display.BodyTemplate1, BodyDefaultProperties | BodyTextContentProperty | BodyTitleProperty>;
-
-  /**
-   * BodyTemplate2
-   */
-  alexaBodyTemplate2: Pick<
-    askInterfaces.interfaces.display.BodyTemplate2,
-    BodyDefaultProperties | BodyTextContentProperty | BodyImageProperty | BodyTitleProperty
-  >;
-
-  /**
-   * BodyTemplate3
-   */
-  alexaBodyTemplate3: Pick<
-    askInterfaces.interfaces.display.BodyTemplate3,
-    BodyDefaultProperties | BodyTextContentProperty | BodyImageProperty | BodyTitleProperty
-  >;
-
-  /**
-   * BodyTemplate6
-   */
-  alexaBodyTemplate6: Pick<askInterfaces.interfaces.display.BodyTemplate6, BodyDefaultProperties | BodyTextContentProperty | BodyImageProperty>;
-
-  /**
-   * BodyTemplate7
-   */
-  alexaBodyTemplate7: Pick<askInterfaces.interfaces.display.BodyTemplate7, BodyDefaultProperties | BodyTitleProperty | BodyImageProperty>;
 }
 
 /**
@@ -113,60 +114,74 @@ export interface AlexaSpecificHandable<CustomTypes extends AlexaSpecificTypes> e
    * sets any Directive Alexa supports, overwrites any other directives, wich are set via the other methods, like ListTemplate1
    * @param customDirectives
    */
-  setAlexaCustomDirectives(customDirectives: CustomTypes["customDirectives"] | Promise<CustomTypes["customDirectives"]>): this;
+  setAlexaCustomDirectives(customDirectives: OptionallyPromise<CustomTypes["customDirectives"]>): this;
 
   /**
    * Add hint directive to Response
    * A Hint directive requires that a display template, other than BodyTemplate3 or ListTemplate1, is also be included.
    * @param hint string without ssml to show as Hint
    */
-  setAlexaHint(hint: string | Promise<string>): this;
+  setAlexaHint(hint: OptionallyPromise<string>): this;
 
   /**
    * List Template 1 should be used for lists where images are not the primary content because the content will be relatively small on Echo Spot.
+   *
+   * Be aware that you can set only one Template, the last set template will be used for the response.
    * @param template
    */
-  setAlexaListTemplate1(template: CustomTypes["alexaTemplate"] | Promise<CustomTypes["alexaTemplate"]>): this;
+  setAlexaListTemplate1(template: OptionallyPromise<AlexaSubtypes.ListTemplate1>): this;
 
   /**
    * List template 2 should be used for lists where images are the primary content. Note that for Echo Spot, only one item will be visible at a time.
+   *
+   * Be aware that you can set only one Template, the last set template will be used for the response.
    * @param template
    */
-  setAlexaListTemplate2(template: CustomTypes["alexaListTemplate1"] | Promise<CustomTypes["alexaListTemplate1"]>): this;
+  setAlexaListTemplate2(template: OptionallyPromise<AlexaSubtypes.ListTemplate2>): this;
 
   /**
    * Use this template to present information in long blocks of text.
+   *
+   * Be aware that you can set only one Template, the last set template will be used for the response.
    * @param template only necessary Objects of
    */
-  setAlexaBodyTemplate1(template: CustomTypes["alexaBodyTemplate1"] | Promise<CustomTypes["alexaBodyTemplate1"]>): this;
+  setAlexaBodyTemplate1(template: OptionallyPromise<AlexaSubtypes.BodyTemplate1>): this;
 
   /**
    * Use this template for presenting information on a specific entity with a lot of detail.
    * This screen typically follows selecting an item from a list or if a user’s request yields only one item.
    * Note: Hints can be displayed on Echo Show, but not on Echo Spot.
+   *
+   * Be aware that you can set only one Template, the last set template will be used for the response.
    * @param template
    */
-  setAlexaBodyTemplate2(template: CustomTypes["alexaBodyTemplate2"] | Promise<CustomTypes["alexaBodyTemplate2"]>): this;
+  setAlexaBodyTemplate2(template: OptionallyPromise<AlexaSubtypes.BodyTemplate2>): this;
 
   /**
    * Use this template for presenting information on a specific entity with a lot of detail.
    * This screen typically follows selecting an item from a list or if a user’s request yields only one item.
    * Note: Hints can be displayed on Echo Show, but not on Echo Spot.
+   *
+   * Be aware that you can set only one Template, the last set template will be used for the response.
    * @param template
    */
-  setAlexaBodyTemplate3(template: CustomTypes["alexaBodyTemplate3"] | Promise<CustomTypes["alexaBodyTemplate3"]>): this;
+  setAlexaBodyTemplate3(template: OptionallyPromise<AlexaSubtypes.BodyTemplate3>): this;
 
   /**
    * This template is used as an introductory, title, or header screen.
+   *
+   * Be aware that you can set only one Template, the last set template will be used for the response.
    * @param template
    */
-  setAlexaBodyTemplate6(template: CustomTypes["alexaBodyTemplate6"] | Promise<CustomTypes["alexaBodyTemplate6"]>): this;
+  setAlexaBodyTemplate6(template: OptionallyPromise<AlexaSubtypes.BodyTemplate6>): this;
 
   /**
    * Use this template to display a full-width foreground image.
+   *
+   * Be aware that you can set only one Template, the last set template will be used for the response.
    * @param template
    */
-  setAlexaBodyTemplate7(template: CustomTypes["alexaBodyTemplate7"] | Promise<CustomTypes["alexaBodyTemplate7"]>): this;
+  setAlexaBodyTemplate7(template: OptionallyPromise<AlexaSubtypes.BodyTemplate7>): this;
 }
 
 export interface AlexaRequestContext extends RequestContext {

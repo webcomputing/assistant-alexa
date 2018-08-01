@@ -5,13 +5,14 @@ import {
   CardMixin,
   injectionNames,
   MinimalRequestExtraction,
+  OptionallyPromise,
   RepromptsMixin,
   RequestContext,
   ResponseHandlerExtensions,
   SessionDataMixin,
 } from "assistant-source";
 import { inject, injectable } from "inversify";
-import { AlexaSpecificHandable, AlexaSpecificTypes } from "./public-interfaces";
+import { AlexaSpecificHandable, AlexaSpecificTypes, AlexaSubtypes } from "./public-interfaces";
 
 @injectable()
 export class AlexaHandler<CustomTypes extends AlexaSpecificTypes>
@@ -27,9 +28,94 @@ export class AlexaHandler<CustomTypes extends AlexaSpecificTypes>
     super(requestContext, extraction, killSession, responseHandlerExtensions);
   }
 
+  public setAlexaCustomDirectives(customDirectives: OptionallyPromise<CustomTypes["customDirectives"]>): this {
+    this.promises.customDirectives = { resolver: customDirectives };
+    return this;
+  }
+
+  public setAlexaHint(hint: OptionallyPromise<string>): this {
+    this.promises.alexaHint = {
+      resolver: hint,
+      thenMap: (value: string) => {
+        return {
+          type: "PlainText",
+          text: value,
+        };
+      },
+    };
+
+    return this;
+  }
+
+  public setAlexaListTemplate1(template: OptionallyPromise<AlexaSubtypes.ListTemplate1>): this {
+    this.promises.alexaTemplate = {
+      resolver: template,
+      thenMap: this.mapTemplate<"ListTemplate1", askInterfaces.interfaces.display.ListTemplate1>("ListTemplate1"),
+    };
+    return this;
+  }
+
+  public setAlexaListTemplate2(template: OptionallyPromise<AlexaSubtypes.ListTemplate2>): this {
+    this.promises.alexaTemplate = {
+      resolver: template,
+      thenMap: this.mapTemplate<"ListTemplate2", askInterfaces.interfaces.display.ListTemplate2>("ListTemplate2"),
+    };
+    return this;
+  }
+
+  public setAlexaBodyTemplate1(template: OptionallyPromise<AlexaSubtypes.BodyTemplate1>): this {
+    this.promises.alexaTemplate = {
+      resolver: template,
+      thenMap: this.mapTemplate<"BodyTemplate1", askInterfaces.interfaces.display.BodyTemplate1>("BodyTemplate1"),
+    };
+    return this;
+  }
+
+  public setAlexaBodyTemplate2(template: OptionallyPromise<AlexaSubtypes.BodyTemplate2>): this {
+    this.promises.alexaTemplate = {
+      resolver: template,
+      thenMap: this.mapTemplate<"BodyTemplate2", askInterfaces.interfaces.display.BodyTemplate2>("BodyTemplate2"),
+    };
+    return this;
+  }
+
+  public setAlexaBodyTemplate3(template: OptionallyPromise<AlexaSubtypes.BodyTemplate3>): this {
+    this.promises.alexaTemplate = {
+      resolver: template,
+      thenMap: this.mapTemplate<"BodyTemplate3", askInterfaces.interfaces.display.BodyTemplate3>("BodyTemplate3"),
+    };
+    return this;
+  }
+
+  public setAlexaBodyTemplate6(template: OptionallyPromise<AlexaSubtypes.BodyTemplate6>): this {
+    this.promises.alexaTemplate = {
+      resolver: template,
+      thenMap: this.mapTemplate<"BodyTemplate6", askInterfaces.interfaces.display.BodyTemplate6>("BodyTemplate6"),
+    };
+    return this;
+  }
+
+  public setAlexaBodyTemplate7(template: OptionallyPromise<AlexaSubtypes.BodyTemplate7>): this {
+    this.promises.alexaTemplate = {
+      resolver: template,
+      thenMap: this.mapTemplate<"BodyTemplate7", askInterfaces.interfaces.display.BodyTemplate7>("BodyTemplate7"),
+    };
+    return this;
+  }
+
+  /**
+   * Returns the Response
+   * @param results
+   */
   public getBody(results: Partial<CustomTypes>): askInterfaces.ResponseEnvelope {
     // Add base body
-    const response = this.getBaseBody(results);
+    let response = this.getBaseBody(results);
+
+    [this.fillListTemplate, this.fillHint, this.fillCustomDirectives].forEach(
+      (fn: (results: Partial<CustomTypes>, payload: askInterfaces.ResponseEnvelope) => askInterfaces.ResponseEnvelope) => {
+        response = fn.bind(this)(results, response);
+      }
+    );
 
     // Set cards
     if (results.shouldAuthenticate) {
@@ -51,11 +137,11 @@ export class AlexaHandler<CustomTypes extends AlexaSpecificTypes>
     return response;
   }
 
-  public createLinkAccountCard(): askInterfaces.ui.Card {
+  private createLinkAccountCard(): askInterfaces.ui.Card {
     return { type: "LinkAccount" };
   }
 
-  public createCard(results: Partial<CustomTypes>): askInterfaces.ui.Card {
+  private createCard(results: Partial<CustomTypes>): askInterfaces.ui.Card {
     if (!results.card || !results.card.title || !results.card.description) {
       throw new Error("Title and discription must be filled for a card!");
     }
@@ -102,6 +188,52 @@ export class AlexaHandler<CustomTypes extends AlexaSpecificTypes>
     return {
       type: "PlainText",
       text: voiceMessage.text,
+    };
+  }
+
+  private fillListTemplate(results: Partial<CustomTypes>, payload: askInterfaces.ResponseEnvelope): askInterfaces.ResponseEnvelope {
+    if (results.alexaTemplate) {
+      payload.response.directives = [
+        {
+          type: "Display.RenderTemplate",
+          template: results.alexaTemplate,
+        },
+      ];
+    }
+
+    return payload;
+  }
+
+  private fillHint(results: Partial<CustomTypes>, payload: askInterfaces.ResponseEnvelope): askInterfaces.ResponseEnvelope {
+    if (results.alexaHint) {
+      if (!payload.response.directives) {
+        payload.response.directives = [];
+      }
+
+      payload.response.directives.push({
+        type: "Hint",
+        hint: results.alexaHint,
+      });
+    }
+
+    return payload;
+  }
+
+  private fillCustomDirectives(results: Partial<CustomTypes>, payload: askInterfaces.ResponseEnvelope): askInterfaces.ResponseEnvelope {
+    if (results.customDirectives) {
+      payload.response.directives = results.customDirectives;
+    }
+
+    return payload;
+  }
+
+  /**
+   * Maps TemplateSubType to full Template Directive
+   * @param type
+   */
+  private mapTemplate<K, T extends { type: K }>(type: K): ((value: any) => T) {
+    return (value: T) => {
+      return { ...(value as any), type };
     };
   }
 }
