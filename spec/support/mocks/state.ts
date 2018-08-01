@@ -1,6 +1,6 @@
-import { injectionNames, State } from "assistant-source";
+import { BasicHandler, injectionNames, State } from "assistant-source";
 import { inject, injectable } from "inversify";
-import { AlexaSpecificTypes, AlexaSubtypes } from "../../../src/assistant-alexa";
+import { AlexaSpecificTypes } from "../../../src/assistant-alexa";
 import { AlexaHandler } from "../../../src/components/alexa/handler";
 import { bodyTemplate1, bodyTemplate2, bodyTemplate3, bodyTemplate6, bodyTemplate7, hint, listTemplate1, listTemplate2 } from "./directives";
 
@@ -9,7 +9,7 @@ export class MainState implements State.Required {
   constructor(@inject(injectionNames.current.responseHandler) private handler: AlexaHandler<AlexaSpecificTypes>) {}
 
   public imageCardIntent() {
-    this.handler.setCard({ title: "My title", description: "My body", cardImage: "My image" });
+    this.handler.setCard({ title: "My title", description: "My body", cardImage: "My image", smallCardImage: "My small image" });
   }
 
   public standardCardIntent() {

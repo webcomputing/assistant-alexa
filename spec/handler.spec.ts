@@ -16,7 +16,7 @@ describe("Handler", function() {
     this.alexaSpecHelper = new AlexaSpecHelper(this.specHelper);
   });
 
-  describe(" with spec setp", function() {
+  describe("with spec setp", function() {
     beforeEach(async function(this: CurrentThisContext) {
       this.handler = await this.alexaSpecHelper.pretendIntentCalled("test");
       this.responseResults = this.specHelper.getResponseResults();
@@ -50,7 +50,7 @@ describe("Handler", function() {
       expect(card.type).toEqual("Standard");
       expect(card.title).toEqual("My title");
       expect(card.text).toEqual("My body");
-      expect(card.image.smallImageUrl).toEqual("My image");
+      expect(card.image.smallImageUrl).toEqual("My small image");
       expect(card.image.largeImageUrl).toEqual("My image");
     });
   });
@@ -157,6 +157,7 @@ function testDirective(directiveName: string, intent: string, expectedDirective:
     this.handler = await this.alexaSpecHelper.pretendIntentCalled(intent);
     this.responseResults = this.specHelper.getResponseResults();
   });
+
   it(`sets ${directiveName} correctly`, async function(this: CurrentThisContext) {
     const directives = ((this.handler as any).getBody(this.responseResults) as askInterfaces.ResponseEnvelope).response.directives;
     expect(directives).not.toBeUndefined();

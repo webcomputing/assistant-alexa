@@ -88,8 +88,11 @@ export namespace AlexaSubtypes {
  * Add custom types here
  */
 export interface AlexaSpecificTypes extends BasicAnswerTypes {
-  card: BasicAnswerTypes["card"] & {
-    smallImage?: string;
+  card: {
+    title: string;
+    description: string;
+    cardImage?: string;
+    smallCardImage?: string;
   };
   /**
    * allows to set all derectives at once, this will overwrite all other directives
@@ -112,12 +115,12 @@ export interface AlexaSpecificTypes extends BasicAnswerTypes {
  *
  * some of the descriptions for the Methods are from https://developer.amazon.com/blogs/alexa/post/05a2ea89-2118-4dcb-a8df-af3d8ac623a8/building-for-echo-show-and-echo-spot-vui-gui-best-practices
  */
-export interface AlexaSpecificHandable<CustomTypes extends AlexaSpecificTypes> extends BasicHandable<CustomTypes> {
+export interface AlexaSpecificHandable<MergedTypes extends AlexaSpecificTypes> extends BasicHandable<MergedTypes> {
   /**
    * sets any Directive Alexa supports, overwrites any other directives, wich are set via the other methods, like ListTemplate1
    * @param customDirectives
    */
-  setAlexaCustomDirectives(customDirectives: OptionallyPromise<CustomTypes["customDirectives"]>): this;
+  setAlexaCustomDirectives(customDirectives: OptionallyPromise<MergedTypes["customDirectives"]>): this;
 
   /**
    * Add hint directive to Response
