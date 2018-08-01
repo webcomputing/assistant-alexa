@@ -3,7 +3,7 @@ import {
   ComponentSpecificLoggerFactory,
   GenericIntent,
   injectionNames,
-  intent,
+  intent as Intent,
   Logger,
   RequestExtractor as AssistantJSRequestExtractor,
 } from "assistant-source";
@@ -81,9 +81,13 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
       return (chainurl, signature, body, callback: (error) => any) => {
         callback(false);
       };
-    } else {
-      return verifyAlexa;
     }
+
+    return verifyAlexa;
+  }
+
+  public getRequestTimestamp(context: AlexaRequestContext) {
+    return context.body.request.timestamp;
   }
 
   private fitsInternal(context: AlexaRequestContext) {
@@ -106,7 +110,7 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
     return null;
   }
 
-  private getIntent(context: AlexaRequestContext): intent {
+  private getIntent(context: AlexaRequestContext): Intent {
     const genericIntent = this.getGenericIntent(context);
     if (genericIntent !== null) return genericIntent;
 
@@ -137,10 +141,6 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
 
   private getLanguage(context: AlexaRequestContext): string {
     return context.body.request.locale.split("-")[0]; // returns "en", "de", ...
-  }
-
-  public getRequestTimestamp(context: AlexaRequestContext) {
-    return context.body.request.timestamp;
   }
 
   private getUser(context: AlexaRequestContext): string | undefined {

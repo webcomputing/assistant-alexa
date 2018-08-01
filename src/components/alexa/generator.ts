@@ -1,3 +1,4 @@
+// tslint:disable:no-console
 import { GenericIntent, PlatformGenerator } from "assistant-source";
 import * as fs from "fs";
 import { inject, injectable } from "inversify";
@@ -36,7 +37,8 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
     console.log("=================      FINISHED.      =================");
   }
 
-  /** Returns Intent Schema for Amazon Alexa Config
+  /**
+   * Returns Intent Schema for Amazon Alexa Config
    * @param preparedIntentConfiguration: Result of prepareConfiguration()
    */
   public buildIntentSchema(preparedIntentConfiguration: PreparedIntentConfiguration[], parameterMapping: PlatformGenerator.EntityMapping): IntentSchema[] {

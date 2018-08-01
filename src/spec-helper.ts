@@ -1,4 +1,4 @@
-import { intent, PlatformSpecHelper, RequestContext, SpecHelper } from "assistant-source";
+import { intent as Intent, PlatformSpecHelper, RequestContext, SpecHelper } from "assistant-source";
 import { AlexaHandler } from "./components/alexa/handler";
 import { AlexaSpecificHandable, AlexaSpecificTypes, ExtractionInterface } from "./components/alexa/public-interfaces";
 
@@ -9,7 +9,7 @@ export class AlexaSpecHelper implements PlatformSpecHelper<AlexaSpecificTypes, A
     this.specSetup = assistantSpecSetup;
   }
 
-  public async pretendIntentCalled(intent: intent, autoStart = true, additionalExtractions = {}, additionalContext = {}) {
+  public async pretendIntentCalled(intent: Intent, autoStart = true, additionalExtractions = {}, additionalContext = {}) {
     const extraction: ExtractionInterface = {
       intent,
       platform: "alexa",
@@ -28,6 +28,7 @@ export class AlexaSpecHelper implements PlatformSpecHelper<AlexaSpecificTypes, A
       path: "/alexa",
       body: {},
       headers: {},
+      // tslint:disable-next-line:no-empty
       responseCallback: () => {},
       ...additionalContext,
     };

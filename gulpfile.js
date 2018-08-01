@@ -5,7 +5,9 @@ const gulp = require("gulp"),
   clean = require("gulp-clean"),
   shell = require("gulp-shell"),
   watch = require("gulp-watch"),
-  sourcemaps = require("gulp-sourcemaps");
+  sourcemaps = require("gulp-sourcemaps"),
+  execSync = require("child_process").execSync,
+  fs = require("fs");
 
 /** Folder containing the sources */
 const SOURCES = ["src/**/*.ts"];
@@ -35,11 +37,11 @@ function runJasmine(file) {
 }
 
 /** Default task: Cleans build files, executes linter, builds project. Is executed automatically if using "gulp". Does not emit sourcefiles, good for deployment. */
-gulp.task("default", ["build-sources", "build-dts", "test-coverage"]);
+gulp.task("default", ["lint", "build-sources", "test-coverage"]);
 
 gulp.task("build", ["build-sources", "build-dts"]);
 
-/** Cleans project: Removes build folders ("lib", "dts", ".nyc_output") */
+/** Cleans project: Removes build folders ("js", "lib", "dts", ".nyc_output") */
 gulp.task("clean", function() {
   return gulp.src(["js", "lib", "dts", ".nyc_output", "coverage"], { read: false }).pipe(clean());
 });
@@ -47,6 +49,39 @@ gulp.task("clean", function() {
 /** Runs all tests. We dont need to emit sourcemaps here since jasmine-ts handles this for us. */
 gulp.task("test", ["build-sources"], shell.task('jasmine-ts "**/*.spec.ts"'));
 gulp.task("test-coverage", ["build-sources"], shell.task('nyc -e .ts -x "*.spec.ts" jasmine-ts "**/*.spec.ts"'));
+
+/** Creates an encrypted .zip file with all relevant files for deployment */
+gulp.task("bundle", ["lint", "build-sources", "test"], function(done) {
+  // Grab the zip encryption password. You have to create such a file in the root project directory. This is added to .gitignore!
+  const encryptionPassword = fs.readFileSync("./bundle.password", "utf8");
+
+  // Get version, current branch and date  (for the zip's name)
+  const version = fs.readFileSync("./VERSION", "utf8");
+  const branch = execSync("git rev-parse --abbrev-ref HEAD")
+    .toString()
+    .replace("\n", "")
+    .replace("/", "-");
+  const date = new Date()
+    .toISOString()
+    .slice(0, 10)
+    .slice(2)
+    .replace(/-/g, "");
+
+  // List of files to include into zip
+  const files = ["node_modules", "js", "config", "package-lock.json", "package.json", "VERSION"];
+
+  // Run npm install with --production
+  shell.task(`npm prune --production`, { verbose: true })(() => {
+    // Create zip file
+    const zipName = `bundle-${version}-${branch}-${date}.zip`;
+    shell.task(`zip --password "${encryptionPassword}" -r ${zipName} ${files.join(" ")}`, { quiet: true })(() => {
+      console.log(`created zip file: ${zipName}, added: ${files}`);
+
+      // Reinstall all node_modules
+      shell.task("npm i", { verbose: true })(done);
+    });
+  });
+});
 
 /** Watches file changes in source or spec files and executes specs automatically */
 gulp.task("specs-watcher", ["build-sources"], function() {
@@ -88,8 +123,8 @@ gulp.task("build-sources-and-maps", ["clean"], function() {
     .src(SOURCES)
     .pipe(sourcemaps.init())
     .pipe(tsLibProject())
-    .on("error", function(err) {
-      process.exit(1);
+    .once("error", function() {
+      this.once("finish", () => process.exit(1));
     })
     .js.pipe(sourcemaps.write(".", { includeContent: false, sourceRoot: "./" }))
     .pipe(gulp.dest(file => file.base));
@@ -100,8 +135,8 @@ gulp.task("build-sources", ["clean"], function() {
   return gulp
     .src(SOURCES)
     .pipe(tsLibProject())
-    .on("error", function(err) {
-      process.exit(1);
+    .once("error", function() {
+      this.once("finish", () => process.exit(1));
     })
     .js.pipe(gulp.dest(file => file.base));
 });
@@ -126,7 +161,6 @@ const tsDtsProject = tsc.createProject("tsconfig.json", {
   noResolve: false,
   typescript: require("typescript"),
 });
-
 gulp.task("build-dts", ["clean"], function() {
   return gulp
     .src(SOURCES)

@@ -20,8 +20,8 @@ export class MainState implements State.Required {
     this.handler.endSessionWith("Hello from alexa!");
   }
 
-  public unansweredGenericIntent() {
-    this.handler.send();
+  public async unansweredGenericIntent() {
+    await this.handler.send();
   }
 
   public customDirectivesIntent() {
