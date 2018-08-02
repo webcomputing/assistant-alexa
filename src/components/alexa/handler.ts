@@ -15,24 +15,20 @@ import { inject, injectable } from "inversify";
 import { AlexaSpecificHandable, AlexaSpecificTypes, AlexaSubtypes } from "./public-interfaces";
 
 @injectable()
-export class AlexaHandler<MergedTypes extends AlexaSpecificTypes>
-  extends AuthenticationMixin(CardMixin(RepromptsMixin(SessionDataMixin(BasicHandler))))<MergedTypes>
-  implements AlexaSpecificHandable<MergedTypes> {
+export class AlexaHandler<MergedAnswerTypes extends AlexaSpecificTypes>
+  extends AuthenticationMixin(CardMixin(RepromptsMixin(SessionDataMixin(BasicHandler))))<MergedAnswerTypes>
+  implements AlexaSpecificHandable<MergedAnswerTypes> {
   constructor(
     @inject(injectionNames.current.requestContext) requestContext: RequestContext,
     @inject(injectionNames.current.extraction) extraction: MinimalRequestExtraction,
     @inject(injectionNames.current.killSessionService) killSession: () => Promise<void>,
     @inject(injectionNames.current.responseHandlerExtensions)
-    responseHandlerExtensions: ResponseHandlerExtensions<MergedTypes, AlexaSpecificHandable<MergedTypes>>
+    responseHandlerExtensions: ResponseHandlerExtensions<MergedAnswerTypes, AlexaSpecificHandable<MergedAnswerTypes>>
   ) {
     super(requestContext, extraction, killSession, responseHandlerExtensions);
   }
 
-  public setCard(card: OptionallyPromise<MergedTypes["card"]>): this {
-    return super.setCard(card);
-  }
-
-  public setAlexaCustomDirectives(customDirectives: OptionallyPromise<MergedTypes["customDirectives"]>): this {
+  public setAlexaCustomDirectives(customDirectives: OptionallyPromise<MergedAnswerTypes["customDirectives"]>): this {
     this.promises.customDirectives = { resolver: customDirectives };
     return this;
   }
@@ -111,12 +107,12 @@ export class AlexaHandler<MergedTypes extends AlexaSpecificTypes>
    * Returns the Response
    * @param results
    */
-  public getBody(results: Partial<MergedTypes>): askInterfaces.ResponseEnvelope {
+  public getBody(results: Partial<MergedAnswerTypes>): askInterfaces.ResponseEnvelope {
     // Add base body
     let response = this.getBaseBody(results);
 
     [this.fillListTemplate, this.fillHint, this.fillCustomDirectives].forEach(
-      (fn: (results: Partial<MergedTypes>, payload: askInterfaces.ResponseEnvelope) => askInterfaces.ResponseEnvelope) => {
+      (fn: (results: Partial<MergedAnswerTypes>, payload: askInterfaces.ResponseEnvelope) => askInterfaces.ResponseEnvelope) => {
         response = fn.bind(this)(results, response);
       }
     );
@@ -145,7 +141,7 @@ export class AlexaHandler<MergedTypes extends AlexaSpecificTypes>
     return { type: "LinkAccount" };
   }
 
-  private createCard(results: Partial<MergedTypes>): askInterfaces.ui.Card {
+  private createCard(results: Partial<MergedAnswerTypes>): askInterfaces.ui.Card {
     if (!results.card || !results.card.title || !results.card.description) {
       throw new Error("Title and discription must be filled for a card!");
     }
@@ -163,13 +159,14 @@ export class AlexaHandler<MergedTypes extends AlexaSpecificTypes>
       title: results.card.title,
       text: results.card.description,
       image: {
-        smallImageUrl: results.card.smallCardImage || results.card.cardImage,
+        // TODO
+        smallImageUrl: results.card.cardImage,
         largeImageUrl: results.card.cardImage,
       },
     };
   }
 
-  private getBaseBody(results: Partial<MergedTypes>): askInterfaces.ResponseEnvelope {
+  private getBaseBody(results: Partial<MergedAnswerTypes>): askInterfaces.ResponseEnvelope {
     const base = {
       version: "1.0",
       response: {
@@ -180,7 +177,7 @@ export class AlexaHandler<MergedTypes extends AlexaSpecificTypes>
     return results.sessionData ? { sessionAttributes: { sessionKey: results.sessionData }, ...base } : base;
   }
 
-  private getSpeechBody(voiceMessage: MergedTypes["voiceMessage"]): askInterfaces.ui.OutputSpeech {
+  private getSpeechBody(voiceMessage: MergedAnswerTypes["voiceMessage"]): askInterfaces.ui.OutputSpeech {
     if (voiceMessage.isSSML) {
       return {
         type: "SSML",
@@ -194,7 +191,7 @@ export class AlexaHandler<MergedTypes extends AlexaSpecificTypes>
     };
   }
 
-  private fillListTemplate(results: Partial<MergedTypes>, payload: askInterfaces.ResponseEnvelope): askInterfaces.ResponseEnvelope {
+  private fillListTemplate(results: Partial<MergedAnswerTypes>, payload: askInterfaces.ResponseEnvelope): askInterfaces.ResponseEnvelope {
     if (results.alexaTemplate) {
       payload.response.directives = [
         {
@@ -207,7 +204,7 @@ export class AlexaHandler<MergedTypes extends AlexaSpecificTypes>
     return payload;
   }
 
-  private fillHint(results: Partial<MergedTypes>, payload: askInterfaces.ResponseEnvelope): askInterfaces.ResponseEnvelope {
+  private fillHint(results: Partial<MergedAnswerTypes>, payload: askInterfaces.ResponseEnvelope): askInterfaces.ResponseEnvelope {
     if (results.alexaHint) {
       if (!payload.response.directives) {
         payload.response.directives = [];
@@ -222,7 +219,7 @@ export class AlexaHandler<MergedTypes extends AlexaSpecificTypes>
     return payload;
   }
 
-  private fillCustomDirectives(results: Partial<MergedTypes>, payload: askInterfaces.ResponseEnvelope): askInterfaces.ResponseEnvelope {
+  private fillCustomDirectives(results: Partial<MergedAnswerTypes>, payload: askInterfaces.ResponseEnvelope): askInterfaces.ResponseEnvelope {
     if (results.customDirectives) {
       payload.response.directives = results.customDirectives;
     }

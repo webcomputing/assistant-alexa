@@ -50,7 +50,7 @@ describe("Handler", function() {
       expect(card.type).toEqual("Standard");
       expect(card.title).toEqual("My title");
       expect(card.text).toEqual("My body");
-      expect(card.image.smallImageUrl).toEqual("My small image");
+      expect(card.image.smallImageUrl).toEqual("My image");
       expect(card.image.largeImageUrl).toEqual("My image");
     });
   });
