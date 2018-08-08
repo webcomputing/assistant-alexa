@@ -28,6 +28,11 @@ export class AlexaHandler<MergedAnswerTypes extends AlexaSpecificTypes> extends 
    * define missing methods from Mixins here
    */
   public setCard!: (card: MergedAnswerTypes["card"] | Promise<MergedAnswerTypes["card"]>) => this;
+  // @ts-ignore
+  public prompt!: (
+    inputText: MergedAnswerTypes["voiceMessage"]["text"] | Promise<MergedAnswerTypes["voiceMessage"]["text"]>,
+    ...reprompts: Array<MergedAnswerTypes["voiceMessage"]["text"] | Promise<MergedAnswerTypes["voiceMessage"]["text"]>>
+  ) => this;
   public setReprompts!: (
     reprompts:
       | Array<MergedAnswerTypes["voiceMessage"]["text"] | Promise<MergedAnswerTypes["voiceMessage"]["text"]>>
