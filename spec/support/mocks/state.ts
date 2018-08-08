@@ -9,7 +9,7 @@ export class MainState implements State.Required {
   constructor(@inject(injectionNames.current.responseHandler) private handler: AlexaHandler<AlexaSpecificTypes>) {}
 
   public imageCardIntent() {
-    this.handler.setCard({ title: "My title", description: "My body", cardImage: "My image" });
+    this.handler.setCard({ title: "My title", description: "My body", cardImage: "My image", smallCardImage: "My small image" });
   }
 
   public standardCardIntent() {

@@ -88,6 +88,10 @@ export namespace AlexaSubtypes {
  * Add custom types here
  */
 export interface AlexaSpecificTypes extends BasicAnswerTypes {
+  card: BasicAnswerTypes["card"] & {
+    smallCardImage?: string;
+  };
+
   /**
    * allows to set all derectives at once, this will overwrite all other directives
    */

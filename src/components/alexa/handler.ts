@@ -183,8 +183,7 @@ export class AlexaHandler<MergedAnswerTypes extends AlexaSpecificTypes> extends 
       title: results.card.title,
       text: results.card.description,
       image: {
-        // TODO
-        smallImageUrl: results.card.cardImage,
+        smallImageUrl: results.card.smallCardImage ? results.card.smallCardImage : results.card.cardImage,
         largeImageUrl: results.card.cardImage,
       },
     };
