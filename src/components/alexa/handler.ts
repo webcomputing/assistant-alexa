@@ -1,10 +1,12 @@
 import * as askInterfaces from "ask-sdk-model";
 import {
+  applyMixin,
   AuthenticationMixin,
   BasicHandler,
   CardMixin,
   injectionNames,
   MinimalRequestExtraction,
+  OptionalHandlerFeatures,
   OptionallyPromise,
   RepromptsMixin,
   RequestContext,
@@ -15,9 +17,26 @@ import { inject, injectable } from "inversify";
 import { AlexaSpecificHandable, AlexaSpecificTypes, AlexaSubtypes } from "./public-interfaces";
 
 @injectable()
-export class AlexaHandler<MergedAnswerTypes extends AlexaSpecificTypes>
-  extends AuthenticationMixin(CardMixin(RepromptsMixin(SessionDataMixin(BasicHandler))))<MergedAnswerTypes>
-  implements AlexaSpecificHandable<MergedAnswerTypes> {
+export class AlexaHandler<MergedAnswerTypes extends AlexaSpecificTypes> extends BasicHandler<MergedAnswerTypes>
+  implements
+    AlexaSpecificHandable<MergedAnswerTypes>,
+    OptionalHandlerFeatures.Authentication,
+    OptionalHandlerFeatures.Card<MergedAnswerTypes>,
+    OptionalHandlerFeatures.Reprompts<MergedAnswerTypes>,
+    OptionalHandlerFeatures.SessionData<MergedAnswerTypes> {
+  /**
+   * define missing methods from Mixins here
+   */
+  public setCard!: (card: MergedAnswerTypes["card"] | Promise<MergedAnswerTypes["card"]>) => this;
+  public setReprompts!: (
+    reprompts:
+      | Array<MergedAnswerTypes["voiceMessage"]["text"] | Promise<MergedAnswerTypes["voiceMessage"]["text"]>>
+      | Promise<Array<MergedAnswerTypes["voiceMessage"]["text"]>>
+  ) => this;
+  public setSessionData!: (sessionData: MergedAnswerTypes["sessionData"] | Promise<MergedAnswerTypes["sessionData"]>) => this;
+  public getSessionData!: () => Promise<MergedAnswerTypes["sessionData"]> | undefined;
+  public setUnauthenticated!: () => this;
+
   constructor(
     @inject(injectionNames.current.requestContext) requestContext: RequestContext,
     @inject(injectionNames.current.extraction) extraction: MinimalRequestExtraction,
@@ -237,3 +256,8 @@ export class AlexaHandler<MergedAnswerTypes extends AlexaSpecificTypes>
     };
   }
 }
+
+/**
+ * Apply Mixins
+ */
+applyMixin(AlexaHandler, [AuthenticationMixin, CardMixin, RepromptsMixin, SessionDataMixin]);
