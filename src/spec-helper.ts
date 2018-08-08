@@ -1,4 +1,4 @@
-import { intent as Intent, PlatformSpecHelper, RequestContext, SpecHelper } from "assistant-source";
+import { HandlerProxyFactory, injectionNames, intent as Intent, PlatformSpecHelper, RequestContext, SpecHelper } from "assistant-source";
 import { AlexaHandler } from "./components/alexa/handler";
 import { AlexaSpecificHandable, AlexaSpecificTypes, ExtractionInterface } from "./components/alexa/public-interfaces";
 
@@ -9,7 +9,12 @@ export class AlexaSpecHelper implements PlatformSpecHelper<AlexaSpecificTypes, A
     this.specSetup = assistantSpecSetup;
   }
 
-  public async pretendIntentCalled(intent: Intent, autoStart = true, additionalExtractions = {}, additionalContext = {}) {
+  public async pretendIntentCalled(
+    intent: Intent,
+    autoStart = true,
+    additionalExtractions = {},
+    additionalContext = {}
+  ): Promise<AlexaSpecificHandable<AlexaSpecificTypes>> {
     const extraction: ExtractionInterface = {
       intent,
       platform: "alexa",
@@ -47,6 +52,11 @@ export class AlexaSpecHelper implements PlatformSpecHelper<AlexaSpecificTypes, A
       await this.specSetup.runMachine();
     }
 
-    return this.specSetup.setup.container.inversifyInstance.get<AlexaSpecificHandable<AlexaSpecificTypes>>("alexa:current-response-handler");
+    const proxyFactory = this.specSetup.setup.container.inversifyInstance.get<HandlerProxyFactory>(injectionNames.handlerProxyFactory);
+
+    const currentHandler = this.specSetup.setup.container.inversifyInstance.get<AlexaSpecificHandable<AlexaSpecificTypes>>("alexa:current-response-handler");
+    const proxiedHandler = proxyFactory.createHandlerProxy(currentHandler);
+
+    return proxiedHandler;
   }
 }
