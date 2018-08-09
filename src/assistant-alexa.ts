@@ -1,3 +1,4 @@
 export * from "./components/alexa/public-interfaces";
 export { descriptor } from "./components/alexa/descriptor";
-export { SpecHelper } from "./spec-helper";
+export { AlexaSpecHelper } from "./spec-helper";
+export { AlexaHandler } from "./components/alexa/handler";

@@ -1,46 +1,42 @@
-import {
-  intent,
-  PlatformSpecHelper,
-  RequestContext,
-  SpecSetup
-  } from "assistant-source";
-import { Component } from "inversify-components";
-import { AlexaHandle } from "./components/alexa/handle";
-import { ExtractionInterface, HandlerInterface } from "./components/alexa/public-interfaces";
+import { HandlerProxyFactory, injectionNames, intent as Intent, PlatformSpecHelper, RequestContext, SpecHelper } from "assistant-source";
+import { AlexaHandler } from "./components/alexa/handler";
+import { AlexaSpecificHandable, AlexaSpecificTypes, ExtractionInterface } from "./components/alexa/public-interfaces";
 
-export class SpecHelper implements PlatformSpecHelper {
-  specSetup: SpecSetup;
+export class AlexaSpecHelper implements PlatformSpecHelper<AlexaSpecificTypes, AlexaSpecificHandable<AlexaSpecificTypes>> {
+  public specSetup: SpecHelper;
 
-  constructor(assistantSpecSetup: SpecSetup) {
+  constructor(assistantSpecSetup: SpecHelper) {
     this.specSetup = assistantSpecSetup;
   }
 
-  async pretendIntentCalled(intent: intent, autoStart = true, additionalExtractions = {}, additionalContext = {}): Promise<HandlerInterface> {
-    let extraction: ExtractionInterface = Object.assign(
-      {
-        platform: "alexa",
-        intent: intent,
-        sessionID: "alexa-mock-session-id",
-        language: "en",
-        oAuthToken: "alexa-mock-oauth-token",
-        temporalAuthToken: "alexa-mock-temp-auth-token",
-        requestTimestamp: "2017-06-24T16:00:18Z",
-        sessionData: "{\"alexa-mock-first-session-attribute\": \"first-session-attribute\",\"alexa-mock-second-session-attribute\": \"second-session-attribute\"}"
-      },
-      additionalExtractions
-    );
+  public async pretendIntentCalled(
+    intent: Intent,
+    autoStart = true,
+    additionalExtractions = {},
+    additionalContext = {}
+  ): Promise<AlexaSpecificHandable<AlexaSpecificTypes>> {
+    const extraction: ExtractionInterface = {
+      intent,
+      platform: "alexa",
+      sessionID: "alexa-mock-session-id",
+      language: "en",
+      oAuthToken: "alexa-mock-oauth-token",
+      temporalAuthToken: "alexa-mock-temp-auth-token",
+      requestTimestamp: "2017-06-24T16:00:18Z",
+      sessionData: '{"alexa-mock-first-session-attribute": "first-session-attribute","alexa-mock-second-session-attribute": "second-session-attribute"}',
+      ...additionalExtractions,
+    };
 
-    let context: RequestContext = Object.assign(
-      {
-        id: "mocked-alexa-request-id",
-        method: "POST",
-        path: "/alexa",
-        body: {},
-        headers: {},
-        responseCallback: () => {},
-      },
-      additionalContext
-    );
+    const context: RequestContext = {
+      id: "mocked-alexa-request-id",
+      method: "POST",
+      path: "/alexa",
+      body: {},
+      headers: {},
+      // tslint:disable-next-line:no-empty
+      responseCallback: () => {},
+      ...additionalContext,
+    };
 
     this.specSetup.createRequestScope(extraction, context);
 
@@ -48,7 +44,7 @@ export class SpecHelper implements PlatformSpecHelper {
     this.specSetup.setup.container.inversifyInstance.unbind("alexa:current-response-handler");
     this.specSetup.setup.container.inversifyInstance
       .bind("alexa:current-response-handler")
-      .to(AlexaHandle)
+      .to(AlexaHandler)
       .inSingletonScope();
 
     // auto run machine if wanted
@@ -56,6 +52,11 @@ export class SpecHelper implements PlatformSpecHelper {
       await this.specSetup.runMachine();
     }
 
-    return this.specSetup.setup.container.inversifyInstance.get<AlexaHandle>("alexa:current-response-handler");
+    const proxyFactory = this.specSetup.setup.container.inversifyInstance.get<HandlerProxyFactory>(injectionNames.handlerProxyFactory);
+
+    const currentHandler = this.specSetup.setup.container.inversifyInstance.get<AlexaSpecificHandable<AlexaSpecificTypes>>("alexa:current-response-handler");
+    const proxiedHandler = proxyFactory.createHandlerProxy(currentHandler);
+
+    return proxiedHandler;
   }
 }

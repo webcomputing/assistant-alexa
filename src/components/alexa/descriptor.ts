@@ -1,7 +1,7 @@
 import { PlatformGenerator, RequestExtractor as AssistantJSRequestExtractor } from "assistant-source";
 import { ComponentDescriptor } from "inversify-components";
 import { AlexaGenerator } from "./generator";
-import { AlexaHandle } from "./handle";
+import { AlexaHandler } from "./handler";
 import { COMPONENT_NAME, Configuration } from "./private-interfaces";
 import { RequestExtractor } from "./request-extractor";
 
@@ -12,8 +12,8 @@ export const defaultConfiguration: Configuration.Defaults = {
 };
 
 export let descriptor: ComponentDescriptor<Configuration.Defaults> = {
+  defaultConfiguration,
   name: COMPONENT_NAME,
-  defaultConfiguration: defaultConfiguration,
   bindings: {
     root: (bindService, lookupService) => {
       bindService.bindExtension<AssistantJSRequestExtractor>(lookupService.lookup("core:unifier").getInterface("requestProcessor")).to(RequestExtractor);
@@ -21,7 +21,7 @@ export let descriptor: ComponentDescriptor<Configuration.Defaults> = {
       bindService.bindExtension<PlatformGenerator.Extension>(lookupService.lookup("core:unifier").getInterface("platformGenerator")).to(AlexaGenerator);
     },
     request: bindService => {
-      bindService.bindGlobalService("current-response-handler").to(AlexaHandle);
+      bindService.bindGlobalService("current-response-handler").to(AlexaHandler);
     },
   },
 };

@@ -1,12 +1,3 @@
-import {
-  MinimalRequestExtraction,
-  MinimalResponseHandler,
-  OptionalExtractions,
-  OptionalHandlerFeatures,
-  RequestContext
-  } from "assistant-source";
-import * as askInterfaces from "./skill-kit-interfaces";
-
 export namespace Configuration {
   /** Configuration defaults -> all of these keys are optional for user */
   export interface Defaults {

@@ -1,11 +1,10 @@
 # Libs
 node_modules
 
-# IDE
-.vscode
-
 # Builds
 dts
 lib
-spec/build
+spec/builds
+coverage
+.nyc_output
 *.tgz

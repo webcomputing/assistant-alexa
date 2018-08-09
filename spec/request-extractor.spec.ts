@@ -1,4 +1,5 @@
 import { RequestContext } from "assistant-source";
+// tslint:disable-next-line:no-submodule-imports
 import { componentInterfaces } from "assistant-source/lib/components/unifier/private-interfaces";
 import { RequestExtractor } from "../src/components/alexa/request-extractor";
 import { validRequestContext } from "./support/mocks/request-context";
@@ -41,8 +42,16 @@ describe("RequestExtractor", function() {
       });
 
       describe("when a valid (but signature missing) amazon request is given", function() {
+        beforeEach(async function() {
+          spyOn((extractor as any).logger, "error");
+        });
+
         it("returns true", function() {
           return extractor.fits(context).then(result => expect(result).toBeFalsy());
+        });
+
+        it("calls logger", async function() {
+          return extractor.fits(context).then(result => expect((extractor as any).logger.error).toHaveBeenCalled());
         });
       });
     });
@@ -73,7 +82,7 @@ describe("RequestExtractor", function() {
       this.extraction = await extractor.extract(context);
       expect(this.extraction).toEqual({
         sessionID: "SessionId.d391741c-a96f-4393-b7b4-ee76c81c24d3",
-        sessionData: "{\"mockAttribute\":\"mockValue\",\"__current_state\":\"mockState\"}",
+        sessionData: '{"mockAttribute":"mockValue","__current_state":"mockState"}',
         intent: "test",
         entities: { entity1: "entityvalue" },
         language: "en",
