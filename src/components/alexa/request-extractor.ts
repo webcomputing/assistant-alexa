@@ -177,7 +177,7 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
       case "SessionEndedRequest":
         return GenericIntent.Unanswered;
       case "Display.ElementSelected":
-        return GenericIntent.SelectedElement;
+        return GenericIntent.Selected;
       default:
         const intentRequest = context.body.request as askInterfaces.IntentRequest;
         return RequestExtractor.makeIntentStringToGenericIntent(intentRequest.intent.name);
