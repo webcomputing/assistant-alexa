@@ -1,6 +1,8 @@
 import * as verifyAlexa from "alexa-verifier";
 import {
+  CommonRequestExtraction,
   ComponentSpecificLoggerFactory,
+  EntitySet,
   GenericIntent,
   injectionNames,
   intent as Intent,
@@ -120,7 +122,7 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
   private getEntities(context: AlexaRequestContext) {
     const request = context.body.request as askInterfaces.IntentRequest | askInterfaces.interfaces.display.ElementSelectedRequest;
 
-    const result = {};
+    const result: CommonRequestExtraction["entities"] = {};
     // insert all entities from normal intent
     if (this.isIntentRequest(request) && typeof request.intent !== "undefined") {
       if (typeof request.intent.slots !== "undefined") {
@@ -139,7 +141,7 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
     }
     // insert SelectedELement as entity
     else if (!this.isIntentRequest(request) && request.token !== undefined) {
-      result["selectedElement"] = request.token;
+      result.selectedElement = request.token;
       return result;
     }
 
