@@ -1,6 +1,8 @@
 import * as verifyAlexa from "alexa-verifier";
 import {
+  CommonRequestExtraction,
   ComponentSpecificLoggerFactory,
+  EntitySet,
   GenericIntent,
   injectionNames,
   intent as Intent,
@@ -118,10 +120,12 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
   }
 
   private getEntities(context: AlexaRequestContext) {
-    const request = context.body.request as askInterfaces.IntentRequest;
-    if (typeof request.intent !== "undefined") {
+    const request = context.body.request as askInterfaces.IntentRequest | askInterfaces.interfaces.display.ElementSelectedRequest;
+
+    const result: CommonRequestExtraction["entities"] = {};
+    // insert all entities from normal intent
+    if (this.isIntentRequest(request) && typeof request.intent !== "undefined") {
       if (typeof request.intent.slots !== "undefined") {
-        const result = {};
         Object.keys(request.intent.slots).forEach(slotName => {
           if (
             typeof request.intent.slots![slotName].value !== "undefined" &&
@@ -135,8 +139,23 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
         return result;
       }
     }
+    // insert SelectedELement as entity
+    else if (!this.isIntentRequest(request) && request.token !== undefined) {
+      result.selectedElement = request.token;
+      return result;
+    }
 
     return {};
+  }
+
+  /**
+   *
+   * @param request
+   */
+  private isIntentRequest(
+    request: askInterfaces.IntentRequest | askInterfaces.interfaces.display.ElementSelectedRequest
+  ): request is askInterfaces.IntentRequest {
+    return request.type === "IntentRequest";
   }
 
   private getLanguage(context: AlexaRequestContext): string {
@@ -159,6 +178,8 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
         return GenericIntent.Invoke;
       case "SessionEndedRequest":
         return GenericIntent.Unanswered;
+      case "Display.ElementSelected":
+        return GenericIntent.Selected;
       default:
         const intentRequest = context.body.request as askInterfaces.IntentRequest;
         return RequestExtractor.makeIntentStringToGenericIntent(intentRequest.intent.name);
