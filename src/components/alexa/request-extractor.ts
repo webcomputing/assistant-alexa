@@ -2,7 +2,6 @@ import * as verifyAlexa from "alexa-verifier";
 import {
   CommonRequestExtraction,
   ComponentSpecificLoggerFactory,
-  EntitySet,
   GenericIntent,
   injectionNames,
   intent as Intent,

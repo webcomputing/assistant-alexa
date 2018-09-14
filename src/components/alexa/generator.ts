@@ -14,7 +14,8 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
     language: string,
     buildDir: string,
     intentConfigurations: PlatformGenerator.IntentConfiguration[],
-    parameterMapping: PlatformGenerator.EntityMapping
+    entityMapping: PlatformGenerator.EntityMapping,
+    customEntityMapping: PlatformGenerator.CustomEntityMapping
   ) {
     const currentBuildDir = buildDir + "/alexa";
 
@@ -24,9 +25,12 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
     console.log("validating...");
     const convertedIntents = this.prepareConfiguration(intentConfigurations);
 
+    console.log("building entities (" + Object.keys(customEntityMapping).length + ")...");
+    const customEntities = this.buildCustomEntities(customEntityMapping);
+
     console.log("building intent schema...");
-    const intentSchemas = this.buildIntentSchema(convertedIntents, parameterMapping);
-    const fullSchema = this.buildFullSchema(intentSchemas);
+    const intentSchema = this.buildIntentSchema(convertedIntents, entityMapping, customEntityMapping);
+    const fullSchema = this.buildFullSchema(intentSchema, customEntities);
 
     console.log("creating build directory: " + currentBuildDir);
     fs.mkdirSync(currentBuildDir);
@@ -38,22 +42,64 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
   }
 
   /**
+   * Returns an entity schema for Alexa Config
+   * @param customEntityMapping
+   */
+  public buildCustomEntities(customEntityMapping: PlatformGenerator.CustomEntityMapping): TypeSchema[] {
+    const config = this.component.configuration;
+    const slotTypes: TypeSchema[] = [];
+
+    Object.keys(customEntityMapping).map(type => {
+      if (typeof config.entities[type] === "undefined") {
+        // Return Custom Slot Type
+        slotTypes.push({
+          name: type,
+          values: customEntityMapping[type].map(valuePair => {
+            return { name: valuePair };
+          }),
+        });
+      } else {
+        // Extend a Built-in Slot Type with Additional Values
+        slotTypes.push({
+          name: config.entities[type],
+          values: customEntityMapping[type].map(valuePair => {
+            return { name: { value: valuePair.value } };
+          }),
+        });
+      }
+    });
+    return slotTypes;
+  }
+
+  /**
    * Returns Intent Schema for Amazon Alexa Config
    * @param preparedIntentConfiguration: Result of prepareConfiguration()
    */
-  public buildIntentSchema(preparedIntentConfiguration: PreparedIntentConfiguration[], parameterMapping: PlatformGenerator.EntityMapping): IntentSchema[] {
+  public buildIntentSchema(
+    preparedIntentConfiguration: PreparedIntentConfiguration[],
+    parameterMapping: PlatformGenerator.EntityMapping,
+    customEntityMapping: PlatformGenerator.CustomEntityMapping
+  ): IntentSchema[] {
     return preparedIntentConfiguration.map(config => {
-      const slots = this.makeSlots(config.entities, parameterMapping);
+      const slots = this.makeSlots(config.entities, parameterMapping, customEntityMapping);
       return {
         name: config.intent,
         slots: slots.length === 0 ? [] : slots,
-        samples: config.utterances,
+        samples: [
+          ...new Set(
+            config.utterances.map(utterance => {
+              return utterance.replace(/\{\{(.*?)\}\}/g, (match, value) => {
+                return `{${value.split("|").pop()}}`;
+              });
+            })
+          ),
+        ],
       };
     });
   }
 
   /** Builds full schema out of given intent schemas */
-  public buildFullSchema(intentSchemas: IntentSchema[]): FullAlexaSchema {
+  public buildFullSchema(intentSchema: IntentSchema[], typeSchema: TypeSchema[]): FullAlexaSchema {
     let invocationName: string = this.component.configuration.invocationName;
     /** Validate invocationName characters */
     if (!invocationName.match(/^[a-z][a-z\s\.']*$/)) {
@@ -65,8 +111,8 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
       interactionModel: {
         languageModel: {
           invocationName,
-          intents: intentSchemas,
-          types: [],
+          intents: intentSchema,
+          types: typeSchema,
         },
       },
     };
@@ -110,11 +156,18 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
     return preparedSet;
   }
 
-  private makeSlots(parameters: string[], parameterMapping: PlatformGenerator.EntityMapping): Array<{ name: string; type: string }> {
+  private makeSlots(
+    parameters: string[],
+    parameterMapping: PlatformGenerator.EntityMapping,
+    customEntityMapping: PlatformGenerator.CustomEntityMapping
+  ): Array<{ name: string; type: string }> {
     return parameters.map(name => {
       const config = this.component.configuration;
 
-      if (typeof config.entities === "undefined" || typeof config.entities[parameterMapping[name]] === "undefined") {
+      if (
+        typeof config.entities === "undefined" ||
+        (typeof config.entities[parameterMapping[name]] === "undefined" && typeof customEntityMapping[parameterMapping[name]] === "undefined")
+      ) {
         throw Error("Missing amazon configured type for parameter '" + name + "'");
       }
 
@@ -138,7 +191,20 @@ export interface FullAlexaSchema {
     languageModel: {
       invocationName: string;
       intents: IntentSchema[];
-      types: any[];
+      types: TypeSchema[];
     };
+  };
+}
+
+export interface TypeSchema {
+  name: string;
+  values: TypeValueSchema[];
+}
+
+export interface TypeValueSchema {
+  id?: string;
+  name: {
+    value: string;
+    synonyms?: string[];
   };
 }
