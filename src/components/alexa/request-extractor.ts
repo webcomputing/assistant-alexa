@@ -158,7 +158,15 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
   }
 
   private getLanguage(context: AlexaRequestContext): string {
-    return context.body.request.locale.split("-")[0]; // returns "en", "de", ...
+    if ("locale" in context.body.request && typeof context.body.request.locale !== "undefined") {
+      return context.body.request.locale.split("-")[0]; // returns "en", "de", ...
+    } else {
+      this.logger.warn(
+        { alexaRequestKeys: Object.keys(context.body.request) },
+        "There is no 'locale' present in current alexa request (see keys). Using 'en' as fallback."
+      );
+      return "en";
+    }
   }
 
   private getUser(context: AlexaRequestContext): string | undefined {
