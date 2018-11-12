@@ -11,7 +11,7 @@ import { inject, injectable } from "inversify";
 import { Component } from "inversify-components";
 import { amazonToGenericIntent as dictionary } from "./intent-dict";
 import { COMPONENT_NAME, Configuration } from "./private-interfaces";
-import { AlexaRequestContext, askInterfaces, ExtractionInterface } from "./public-interfaces";
+import { AlexaDevice, AlexaRequestContext, askInterfaces, ExtractionInterface } from "./public-interfaces";
 
 @injectable()
 export class RequestExtractor implements AssistantJSRequestExtractor {
@@ -62,6 +62,7 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
         intent: this.getIntent(context),
         entities: this.getEntities(context),
         language: this.getLanguage(context),
+        device: this.getDevice(context),
         platform: this.component.name,
         oAuthToken: typeof user === "undefined" ? null : user,
         temporalAuthToken: this.getTemporalAuth(context),
@@ -150,6 +151,10 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
     }
 
     return context.body.session ? context.body.session.user.accessToken : undefined;
+  }
+
+  private getDevice(context: AlexaRequestContext): AlexaDevice {
+    return context.body.context.Display ? "alexaScreen" : "alexaSpeaker";
   }
 
   /* Returns GenericIntent if request is a GenericIntent, or null, if not */

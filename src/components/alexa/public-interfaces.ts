@@ -10,8 +10,12 @@ export interface AlexaConfigurationAttribute {
   alexa: AlexaConfiguration;
 }
 
+/** Possible devices this extractor can return */
+export type AlexaDevice = "alexaScreen" | "alexaSpeaker";
+
 export interface ExtractionInterface
   extends MinimalRequestExtraction,
+    OptionalExtractions.Device,
     OptionalExtractions.SessionData,
     OptionalExtractions.TemporalAuth,
     OptionalExtractions.Timestamp,
