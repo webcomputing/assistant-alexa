@@ -20,6 +20,7 @@ export class AlexaSpecHelper implements PlatformSpecHelper<AlexaSpecificTypes, A
       platform: "alexa",
       sessionID: "alexa-mock-session-id",
       language: "en",
+      device: "alexaSpeaker",
       oAuthToken: "alexa-mock-oauth-token",
       temporalAuthToken: "alexa-mock-temp-auth-token",
       requestTimestamp: "2017-06-24T16:00:18Z",
