@@ -156,7 +156,7 @@ export interface AlexaSpecificHandable<MergedAnswerTypes extends AlexaSpecificTy
    * Be aware that you can set only one Template, the last set template will be used for the response.
    * @param template
    */
-  setAlexaVideoItem(template: OptionallyPromise<AlexaSubtypes.VideoTemplate>): this;
+  setAlexaVideoItem(template: AlexaSubtypes.VideoTemplate): this;
 
   /**
    * Use this template to present information in long blocks of text.
