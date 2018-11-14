@@ -22,6 +22,10 @@ export const bodyTemplate1: AlexaSubtypes.BodyTemplate1 = {
   backgroundImage: { contentDescription: "BodyTemplate1", sources: [{ url: "www.example.org" }] },
 };
 
+export const videoItem: AlexaSubtypes.VideoTemplate = {
+  source: "http://link.de/video.mp4",
+};
+
 export const bodyTemplate2: AlexaSubtypes.BodyTemplate2 = {
   backButton: "VISIBLE",
   textContent: {

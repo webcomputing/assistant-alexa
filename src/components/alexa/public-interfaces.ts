@@ -28,6 +28,11 @@ export namespace AlexaSubtypes {
     export type ListProperties = "token" | "backButton" | "backgroundImage" | "title" | "listItems";
 
     /**
+     * All necessary Properties of a VideoItem
+     */
+    export type VideoItemProperties = "source" | "metadata";
+
+    /**
      * Minimal Properties of BodyTemplates
      */
     export type BodyDefaultProperties = "token" | "backButton" | "backgroundImage";
@@ -51,6 +56,8 @@ export namespace AlexaSubtypes {
   export type ListTemplate1 = Pick<askInterfaces.interfaces.display.ListTemplate1, SubtypeProperties.ListProperties>;
 
   export type ListTemplate2 = Pick<askInterfaces.interfaces.display.ListTemplate2, SubtypeProperties.ListProperties>;
+
+  export type VideoTemplate = Pick<askInterfaces.interfaces.videoapp.VideoItem, SubtypeProperties.VideoItemProperties>;
 
   export type BodyTemplate1 = Pick<
     askInterfaces.interfaces.display.BodyTemplate1,
@@ -142,6 +149,14 @@ export interface AlexaSpecificHandable<MergedAnswerTypes extends AlexaSpecificTy
    * @param template
    */
   setAlexaListTemplate2(template: OptionallyPromise<AlexaSubtypes.ListTemplate2>): this;
+
+  /**
+   * Video template should be used for diaplaying videos.
+   *
+   * Be aware that you can set only one Template, the last set template will be used for the response.
+   * @param template
+   */
+  setAlexaVideoItem(template: AlexaSubtypes.VideoTemplate): this;
 
   /**
    * Use this template to present information in long blocks of text.
