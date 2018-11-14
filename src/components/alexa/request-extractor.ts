@@ -141,7 +141,10 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
   }
 
   private getLanguage(context: AlexaRequestContext): string {
-    return context.body.request.locale.split("-")[0]; // returns "en", "de", ...
+    if ("locale" in context.body.request && typeof context.body.request.locale !== "undefined") {
+      return context.body.request.locale.split("-")[0]; // returns "en", "de", ...
+    }
+    return "unknown";
   }
 
   private getUser(context: AlexaRequestContext): string | undefined {
@@ -154,7 +157,12 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
   }
 
   private getDevice(context: AlexaRequestContext): AlexaDevice {
-    return context.body.context.Display ? "alexaScreen" : "alexaSpeaker";
+    if (context.body.context.Viewport) {
+      if (typeof context.body.context.Viewport.shape !== "undefined") {
+        return context.body.context.Viewport.shape === "RECTANGLE" ? "echoShow" : "echoSpot";
+      }
+    }
+    return "echo";
   }
 
   /* Returns GenericIntent if request is a GenericIntent, or null, if not */

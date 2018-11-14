@@ -11,7 +11,7 @@ export interface AlexaConfigurationAttribute {
 }
 
 /** Possible devices this extractor can return */
-export type AlexaDevice = "alexaScreen" | "alexaSpeaker";
+export type AlexaDevice = "echoSpot" | "echoShow" | "echo";
 
 export interface ExtractionInterface
   extends MinimalRequestExtraction,
