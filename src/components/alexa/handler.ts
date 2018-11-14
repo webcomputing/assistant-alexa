@@ -89,6 +89,9 @@ export class AlexaHandler<MergedAnswerTypes extends AlexaSpecificTypes> extends 
   }
 
   public setAlexaVideoItem(template: AlexaSubtypes.VideoTemplate): this {
+    /**
+     * The VideoApp request not allow a boolean value for 'shouldEndSession' so we have to set it to undefined or delete it
+     */
     this.skipEndSession = true;
     this.setAlexaCustomDirectives([
       {
@@ -170,15 +173,6 @@ export class AlexaHandler<MergedAnswerTypes extends AlexaSpecificTypes> extends 
       response.response.reprompt = { outputSpeech: this.getSpeechBody(results.reprompts[0]) };
     }
 
-    if (
-      response &&
-      response.response &&
-      response.response.directives &&
-      response.response.directives.find(directives => directives.type === "VideoApp.Launch")
-    ) {
-      delete response.response.shouldEndSession;
-    }
-
     return response;
   }
 
@@ -214,7 +208,7 @@ export class AlexaHandler<MergedAnswerTypes extends AlexaSpecificTypes> extends 
     const base = {
       version: "1.0",
       response: {
-        shouldEndSession: this.skipEndSession ? undefined : !!results.shouldSessionEnd, // convert undefined to boolean
+        shouldEndSession: this.skipEndSession ? undefined : !!results.shouldSessionEnd, // If we should not skip the end session, we have to convert undefined to boolean
       },
     };
     // Merge sessionAttributes in base body when sessionData is not null
