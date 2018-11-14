@@ -2,7 +2,17 @@ import * as askInterfaces from "ask-sdk-model";
 import { SpecHelper } from "assistant-source";
 import { AlexaSpecificHandable, AlexaSpecificTypes } from "../src/assistant-alexa";
 import { AlexaSpecHelper } from "../src/spec-helper";
-import { bodyTemplate1, bodyTemplate2, bodyTemplate3, bodyTemplate6, bodyTemplate7, hint, listTemplate1, listTemplate2 } from "./support/mocks/directives";
+import {
+  bodyTemplate1,
+  bodyTemplate2,
+  bodyTemplate3,
+  bodyTemplate6,
+  bodyTemplate7,
+  hint,
+  listTemplate1,
+  listTemplate2,
+  videoItem,
+} from "./support/mocks/directives";
 
 interface CurrentThisContext {
   specHelper: SpecHelper;
@@ -148,6 +158,13 @@ describe("Handler", function() {
     testDirective("BodyTemplate7", "bodyTemplate7", {
       type: "Display.RenderTemplate",
       template: { ...bodyTemplate7, type: "BodyTemplate7" },
+    });
+  });
+
+  describe("with VideoItem", function() {
+    testDirective("VideoItem", "video", {
+      videoItem,
+      type: "VideoApp.Launch",
     });
   });
 });

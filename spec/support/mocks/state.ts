@@ -2,7 +2,7 @@ import { injectionNames, State } from "assistant-source";
 import { inject, injectable } from "inversify";
 import { AlexaSpecificTypes } from "../../../src/assistant-alexa";
 import { AlexaHandler } from "../../../src/components/alexa/handler";
-import { bodyTemplate1, bodyTemplate2, bodyTemplate3, bodyTemplate6, bodyTemplate7, hint, listTemplate1, listTemplate2 } from "./directives";
+import { bodyTemplate1, bodyTemplate2, bodyTemplate3, bodyTemplate6, bodyTemplate7, hint, listTemplate1, listTemplate2, videoItem } from "./directives";
 
 @injectable()
 export class MainState implements State.Required {
@@ -35,6 +35,10 @@ export class MainState implements State.Required {
         type: "Hint",
       },
     ]);
+  }
+
+  public videoIntent() {
+    this.handler.setAlexaVideoItem(videoItem);
   }
 
   public hintIntent() {

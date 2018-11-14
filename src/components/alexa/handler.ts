@@ -41,6 +41,7 @@ export class AlexaHandler<MergedAnswerTypes extends AlexaSpecificTypes> extends 
   public setSessionData!: (sessionData: MergedAnswerTypes["sessionData"] | Promise<MergedAnswerTypes["sessionData"]>) => this;
   public getSessionData!: () => Promise<MergedAnswerTypes["sessionData"]> | undefined;
   public setUnauthenticated!: () => this;
+  private skipEndSession: boolean = false;
 
   constructor(
     @inject(injectionNames.current.requestContext) requestContext: RequestContext,
@@ -84,6 +85,17 @@ export class AlexaHandler<MergedAnswerTypes extends AlexaSpecificTypes> extends 
       resolver: template,
       thenMap: this.mapTemplate<"ListTemplate2", askInterfaces.interfaces.display.ListTemplate2>("ListTemplate2"),
     };
+    return this;
+  }
+
+  public setAlexaVideoItem(template: AlexaSubtypes.VideoTemplate): this {
+    this.skipEndSession = true;
+    this.setAlexaCustomDirectives([
+      {
+        type: "VideoApp.Launch",
+        videoItem: template,
+      },
+    ]);
     return this;
   }
 
@@ -158,6 +170,15 @@ export class AlexaHandler<MergedAnswerTypes extends AlexaSpecificTypes> extends 
       response.response.reprompt = { outputSpeech: this.getSpeechBody(results.reprompts[0]) };
     }
 
+    if (
+      response &&
+      response.response &&
+      response.response.directives &&
+      response.response.directives.find(directives => directives.type === "VideoApp.Launch")
+    ) {
+      delete response.response.shouldEndSession;
+    }
+
     return response;
   }
 
@@ -193,7 +214,7 @@ export class AlexaHandler<MergedAnswerTypes extends AlexaSpecificTypes> extends 
     const base = {
       version: "1.0",
       response: {
-        shouldEndSession: !!results.shouldSessionEnd, // convert undefined to boolean
+        shouldEndSession: this.skipEndSession ? undefined : !!results.shouldSessionEnd, // convert undefined to boolean
       },
     };
     // Merge sessionAttributes in base body when sessionData is not null
