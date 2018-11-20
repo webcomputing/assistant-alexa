@@ -1,4 +1,4 @@
-import { BasicHandler, injectionNames, State } from "assistant-source";
+import { injectionNames, State } from "assistant-source";
 import { inject, injectable } from "inversify";
 import { AlexaSpecificTypes } from "../../../src/assistant-alexa";
 import { AlexaHandler } from "../../../src/components/alexa/handler";
