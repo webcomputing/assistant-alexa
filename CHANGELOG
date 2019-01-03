@@ -1,4 +1,5 @@
 version 0.4.0
+- aligns AlexaSpecHelper with new spec helper interface from AssistantJS 0.4.0
 - new ResponseHandler for compatibility with AssistantJS 0.4.0
 - add new ResponseTypes for Alexa. We use the official types from package ask-sdk-model (https://www.npmjs.com/package/ask-sdk-model)
 - Renamed "SpecHelper" to "AlexaSpecHelper"

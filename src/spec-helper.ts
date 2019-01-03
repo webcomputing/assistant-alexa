@@ -3,18 +3,9 @@ import { AlexaHandler } from "./components/alexa/handler";
 import { AlexaSpecificHandable, AlexaSpecificTypes, ExtractionInterface } from "./components/alexa/public-interfaces";
 
 export class AlexaSpecHelper implements PlatformSpecHelper<AlexaSpecificTypes, AlexaSpecificHandable<AlexaSpecificTypes>> {
-  public specSetup: SpecHelper;
+  constructor(public specHelper: SpecHelper) {}
 
-  constructor(assistantSpecSetup: SpecHelper) {
-    this.specSetup = assistantSpecSetup;
-  }
-
-  public async pretendIntentCalled(
-    intent: Intent,
-    autoStart = true,
-    additionalExtractions = {},
-    additionalContext = {}
-  ): Promise<AlexaSpecificHandable<AlexaSpecificTypes>> {
+  public async pretendIntentCalled(intent: Intent, additionalExtractions = {}, additionalContext = {}): Promise<AlexaSpecificHandable<AlexaSpecificTypes>> {
     const extraction: ExtractionInterface = {
       intent,
       platform: "alexa",
@@ -38,23 +29,20 @@ export class AlexaSpecHelper implements PlatformSpecHelper<AlexaSpecificTypes, A
       ...additionalContext,
     };
 
-    this.specSetup.createRequestScope(extraction, context);
+    this.specHelper.createRequestScope(extraction, context);
 
     // Bind handler as singleton
-    this.specSetup.setup.container.inversifyInstance.unbind("alexa:current-response-handler");
-    this.specSetup.setup.container.inversifyInstance
+    this.specHelper.assistantJs.container.inversifyInstance.unbind("alexa:current-response-handler");
+    this.specHelper.assistantJs.container.inversifyInstance
       .bind("alexa:current-response-handler")
       .to(AlexaHandler)
       .inSingletonScope();
 
-    // auto run machine if wanted
-    if (autoStart) {
-      await this.specSetup.runMachine();
-    }
+    const proxyFactory = this.specHelper.assistantJs.container.inversifyInstance.get<HandlerProxyFactory>(injectionNames.handlerProxyFactory);
 
-    const proxyFactory = this.specSetup.setup.container.inversifyInstance.get<HandlerProxyFactory>(injectionNames.handlerProxyFactory);
-
-    const currentHandler = this.specSetup.setup.container.inversifyInstance.get<AlexaSpecificHandable<AlexaSpecificTypes>>("alexa:current-response-handler");
+    const currentHandler = this.specHelper.assistantJs.container.inversifyInstance.get<AlexaSpecificHandable<AlexaSpecificTypes>>(
+      "alexa:current-response-handler"
+    );
     const proxiedHandler = proxyFactory.createHandlerProxy(currentHandler);
 
     return proxiedHandler;
