@@ -29,6 +29,7 @@ describe("Handler", function() {
   describe("with spec setp", function() {
     beforeEach(async function(this: CurrentThisContext) {
       this.handler = await this.alexaSpecHelper.pretendIntentCalled("test");
+      await this.specHelper.runMachine("MainState");
       this.responseResults = this.specHelper.getResponseResults();
     });
 
@@ -51,6 +52,7 @@ describe("Handler", function() {
   describe("with image card", function() {
     beforeEach(async function(this: CurrentThisContext) {
       this.handler = await this.alexaSpecHelper.pretendIntentCalled("imageCard");
+      await this.specHelper.runMachine("MainState");
       this.responseResults = this.specHelper.getResponseResults();
     });
 
@@ -68,6 +70,7 @@ describe("Handler", function() {
   describe("with standard card", function() {
     beforeEach(async function(this: CurrentThisContext) {
       this.handler = await this.alexaSpecHelper.pretendIntentCalled("standardCard");
+      await this.specHelper.runMachine("MainState");
       this.responseResults = this.specHelper.getResponseResults();
     });
 
@@ -83,6 +86,7 @@ describe("Handler", function() {
   describe("with customDirectives", function() {
     beforeEach(async function(this: CurrentThisContext) {
       this.handler = await this.alexaSpecHelper.pretendIntentCalled("customDirectives");
+      await this.specHelper.runMachine("MainState");
       this.responseResults = this.specHelper.getResponseResults();
     });
 
@@ -97,6 +101,7 @@ describe("Handler", function() {
   describe("with Hint", function() {
     beforeEach(async function(this: CurrentThisContext) {
       this.handler = await this.alexaSpecHelper.pretendIntentCalled("hint");
+      await this.specHelper.runMachine("MainState");
       this.responseResults = this.specHelper.getResponseResults();
     });
 
@@ -172,6 +177,7 @@ describe("Handler", function() {
 function testDirective(directiveName: string, intent: string, expectedDirective: any, minDirectiveLength: number = 1) {
   beforeEach(async function(this: CurrentThisContext) {
     this.handler = await this.alexaSpecHelper.pretendIntentCalled(intent);
+    await this.specHelper.runMachine("MainState");
     this.responseResults = this.specHelper.getResponseResults();
   });
 
