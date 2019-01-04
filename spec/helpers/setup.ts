@@ -5,8 +5,9 @@ import { AssistantJSSetup, SpecHelper } from "assistant-source";
 import { descriptor } from "../../src/assistant-alexa";
 import { configuration } from "../support/mocks/configuration";
 import { MainState } from "../support/mocks/state";
+import { ThisContext } from "../support/this-context";
 
-beforeEach(function() {
+beforeEach(function(this: ThisContext) {
   this.assistantJs = new AssistantJSSetup();
   this.specHelper = new SpecHelper(this.assistantJs);
 
