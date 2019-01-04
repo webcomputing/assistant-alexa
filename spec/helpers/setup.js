@@ -5,15 +5,15 @@ let configuration = require("../support/mocks/configuration").configuration;
 let mainState = require("../support/mocks/state").MainState;
 
 beforeEach(function() {
-  this.specHelper = new assistantJsCore.SpecHelper();
+  this.assistantJs = assistantJsCore.AssistantJSSetup();
+  this.specHelper = new assistantJsCore.SpecHelper(this.assistantJs);
 
   // Bind and configure alexa extension
-  this.specHelper.setup.registerComponent(ownDescriptor);
-  this.specHelper.setup.configureComponent("alexa", configuration);
+  this.assistantJs.registerComponent(ownDescriptor);
+  this.assistantJs.configureComponent("alexa", configuration);
 
   // Prepare all other steps
   this.specHelper.prepare([mainState]);
 
-  this.assistantJs = this.specHelper.setup;
   this.container = this.assistantJs.container;
 });
