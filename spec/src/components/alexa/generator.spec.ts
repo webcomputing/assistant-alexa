@@ -1,12 +1,12 @@
 import { GenericIntent, PlatformGenerator, SpecHelper } from "assistant-source";
 import * as fs from "fs";
 import { Component } from "inversify-components";
-import { AlexaSpecificHandable, AlexaSpecificTypes } from "../../../src/assistant-alexa";
-import { AlexaGenerator } from "../../../src/components/alexa/generator";
-import { Configuration } from "../../../src/components/alexa/private-interfaces";
-import { AlexaSpecHelper } from "../../../src/spec-helper";
-import { deleteFolderRecursive } from "../../support/mocks/utils/fs-utils";
-import { ThisContext } from "../../support/this-context";
+import { AlexaSpecificHandable, AlexaSpecificTypes } from "../../../../src/assistant-alexa";
+import { AlexaGenerator } from "../../../../src/components/alexa/generator";
+import { Configuration } from "../../../../src/components/alexa/private-interfaces";
+import { AlexaSpecHelper } from "../../../../src/spec-helper";
+import { deleteFolderRecursive } from "../../../support/mocks/utils/fs-utils";
+import { ThisContext } from "../../../support/this-context";
 
 interface CurrentThisContext extends ThisContext {
   specHelper: SpecHelper;
@@ -26,7 +26,7 @@ interface CurrentThisContext extends ThisContext {
 
 describe("AlexaGenerator", function() {
   beforeAll(function(this: CurrentThisContext) {
-    this.rootDir = __dirname.replace("spec/src/components", `tmp`);
+    this.rootDir = __dirname.replace("spec/src/components/alexa", `tmp`);
     deleteFolderRecursive(this.rootDir);
     fs.mkdirSync(this.rootDir);
   });
