@@ -266,7 +266,7 @@ describe("AlexaGenerator", function() {
     itbehavesLikeAnAlexaGenerator();
   });
 
-  describe("with GenericIntent Cancel (Speakable GenericIntent)", function(this: CurrentThisContext) {
+  describe("with speakable GenericIntent Cancel and without utterances", function(this: CurrentThisContext) {
     beforeEach(async function(this: CurrentThisContext) {
       this.intentConfigurations = [
         {
@@ -290,7 +290,7 @@ describe("AlexaGenerator", function() {
     itbehavesLikeAnAlexaGenerator();
   });
 
-  describe("with GenericIntent Cancel (Speakable GenericIntent) and utterances", function(this: CurrentThisContext) {
+  describe("with speakable GenericIntent Cancel and with fitting utterances", function(this: CurrentThisContext) {
     beforeEach(async function(this: CurrentThisContext) {
       this.intentConfigurations = [
         {
@@ -338,7 +338,7 @@ describe("AlexaGenerator", function() {
     itbehavesLikeAnAlexaGenerator();
   });
 
-  describe("with GenericIntent Unanswered (Unspeakable GenericIntent)", function(this: CurrentThisContext) {
+  describe("with unspeakable GenericIntent Unanswered", function(this: CurrentThisContext) {
     beforeEach(async function(this: CurrentThisContext) {
       this.intentConfigurations = [
         {
@@ -472,7 +472,7 @@ describe("AlexaGenerator", function() {
     });
   });
 
-  describe("with single intent, utterances, entities but invalid invocation name", function(this: CurrentThisContext) {
+  describe("with single intent, utterances, entities and invalid invocation name", function(this: CurrentThisContext) {
     beforeEach(async function(this: CurrentThisContext) {
       this.componentMetadata.configuration.invocationName = "WRONGinvocationName";
 
