@@ -59,7 +59,7 @@ describe("AlexaGenerator", function() {
           expect(fs.existsSync(`${this.buildDir}/alexa/schema.json`)).toBeTruthy();
         });
 
-        it("schema.json contains expected schema", async function(this: CurrentThisContext) {
+        it("contains expected schema data in the schema.json file", async function(this: CurrentThisContext) {
           const schema = JSON.parse(fs.readFileSync(`${this.buildDir}/alexa/schema.json`).toLocaleString());
           expect(schema).toEqual(this.expectedSchema);
         });
