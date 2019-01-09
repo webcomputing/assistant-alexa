@@ -39,6 +39,13 @@ describe("AlexaGenerator", function() {
     this.alexaSpecHelper = new AlexaSpecHelper(this.specHelper);
     this.componentMetadata = this.container.inversifyInstance.get<Component<Configuration.Runtime>>("meta:component//alexa");
 
+    // Set default values
+    this.language = "en";
+    this.intentConfigurations = [];
+    this.entityMapping = {};
+    this.customEntityMapping = {};
+    this.expectedSchema = {};
+
     // Create a single folder for each executed spec
     this.buildDir = `${this.rootDir}/${new Date().getTime()}`;
     deleteFolderRecursive(this.buildDir);
@@ -49,6 +56,7 @@ describe("AlexaGenerator", function() {
     describe("#execute", function(this: CurrentThisContext) {
       describe("it behaves like an AlexaGenerator", function() {
         beforeEach(async function(this: CurrentThisContext) {
+          this.alexaGenerator = new AlexaGenerator(this.componentMetadata);
           this.alexaGenerator.execute(this.language, this.buildDir, this.intentConfigurations, this.entityMapping, this.customEntityMapping);
         });
         it("creates an alexa specific build directory", async function(this: CurrentThisContext) {
@@ -72,7 +80,6 @@ describe("AlexaGenerator", function() {
   describe("with single intent and utterance", function(this: CurrentThisContext) {
     beforeEach(async function(this: CurrentThisContext) {
       this.alexaGenerator = new AlexaGenerator(this.componentMetadata);
-      this.language = "en";
 
       this.intentConfigurations = [
         {
@@ -81,8 +88,7 @@ describe("AlexaGenerator", function() {
           entities: [],
         },
       ];
-      this.entityMapping = {};
-      this.customEntityMapping = {};
+
       this.expectedSchema = {
         interactionModel: {
           languageModel: {
@@ -99,9 +105,6 @@ describe("AlexaGenerator", function() {
 
   describe("with multiple intents and utterances", function(this: CurrentThisContext) {
     beforeEach(async function(this: CurrentThisContext) {
-      this.alexaGenerator = new AlexaGenerator(this.componentMetadata);
-      this.language = "en";
-
       this.intentConfigurations = [
         {
           intent: "okay",
@@ -114,8 +117,6 @@ describe("AlexaGenerator", function() {
           entities: [],
         },
       ];
-      this.entityMapping = {};
-      this.customEntityMapping = {};
       this.expectedSchema = {
         interactionModel: {
           languageModel: {
@@ -132,9 +133,6 @@ describe("AlexaGenerator", function() {
 
   describe("with single intent, utterance and entities", function(this: CurrentThisContext) {
     beforeEach(async function(this: CurrentThisContext) {
-      this.alexaGenerator = new AlexaGenerator(this.componentMetadata);
-      this.language = "en";
-
       this.intentConfigurations = [
         {
           intent: "okay",
@@ -185,9 +183,6 @@ describe("AlexaGenerator", function() {
 
   describe("with single intent, utterance and multiple entities", function(this: CurrentThisContext) {
     beforeEach(async function(this: CurrentThisContext) {
-      this.alexaGenerator = new AlexaGenerator(this.componentMetadata);
-      this.language = "en";
-
       this.intentConfigurations = [
         {
           intent: "okay",
@@ -233,9 +228,6 @@ describe("AlexaGenerator", function() {
 
   describe("with intents and without utterances and entities", function(this: CurrentThisContext) {
     beforeEach(async function(this: CurrentThisContext) {
-      this.alexaGenerator = new AlexaGenerator(this.componentMetadata);
-      this.language = "en";
-
       this.intentConfigurations = [
         {
           intent: "okay",
@@ -243,9 +235,6 @@ describe("AlexaGenerator", function() {
           entities: [],
         },
       ];
-      this.entityMapping = {};
-
-      this.customEntityMapping = {};
 
       this.expectedSchema = {
         interactionModel: {
@@ -263,14 +252,6 @@ describe("AlexaGenerator", function() {
 
   describe("without intents, utterances and entities", function(this: CurrentThisContext) {
     beforeEach(async function(this: CurrentThisContext) {
-      this.alexaGenerator = new AlexaGenerator(this.componentMetadata);
-      this.language = "en";
-
-      this.intentConfigurations = [];
-      this.entityMapping = {};
-
-      this.customEntityMapping = {};
-
       this.expectedSchema = {
         interactionModel: {
           languageModel: {
@@ -287,9 +268,6 @@ describe("AlexaGenerator", function() {
 
   describe("with GenericIntent Cancel (Speakable GenericIntent)", function(this: CurrentThisContext) {
     beforeEach(async function(this: CurrentThisContext) {
-      this.alexaGenerator = new AlexaGenerator(this.componentMetadata);
-      this.language = "en";
-
       this.intentConfigurations = [
         {
           intent: GenericIntent.Cancel,
@@ -297,9 +275,6 @@ describe("AlexaGenerator", function() {
           entities: [],
         },
       ];
-      this.entityMapping = {};
-
-      this.customEntityMapping = {};
 
       this.expectedSchema = {
         interactionModel: {
@@ -317,9 +292,6 @@ describe("AlexaGenerator", function() {
 
   describe("with GenericIntent Cancel (Speakable GenericIntent) and utterances", function(this: CurrentThisContext) {
     beforeEach(async function(this: CurrentThisContext) {
-      this.alexaGenerator = new AlexaGenerator(this.componentMetadata);
-      this.language = "en";
-
       this.intentConfigurations = [
         {
           intent: GenericIntent.Cancel,
@@ -327,9 +299,6 @@ describe("AlexaGenerator", function() {
           entities: [],
         },
       ];
-      this.entityMapping = {};
-
-      this.customEntityMapping = {};
 
       this.expectedSchema = {
         interactionModel: {
@@ -347,9 +316,6 @@ describe("AlexaGenerator", function() {
 
   describe("with unsupported GenericIntent", function(this: CurrentThisContext) {
     beforeEach(async function(this: CurrentThisContext) {
-      this.alexaGenerator = new AlexaGenerator(this.componentMetadata);
-      this.language = "en";
-
       this.intentConfigurations = [
         {
           intent: 100,
@@ -357,9 +323,6 @@ describe("AlexaGenerator", function() {
           entities: [],
         },
       ];
-      this.entityMapping = {};
-
-      this.customEntityMapping = {};
 
       this.expectedSchema = {
         interactionModel: {
@@ -377,9 +340,6 @@ describe("AlexaGenerator", function() {
 
   describe("with GenericIntent Unanswered (Unspeakable GenericIntent)", function(this: CurrentThisContext) {
     beforeEach(async function(this: CurrentThisContext) {
-      this.alexaGenerator = new AlexaGenerator(this.componentMetadata);
-      this.language = "en";
-
       this.intentConfigurations = [
         {
           intent: GenericIntent.Unanswered,
@@ -387,9 +347,6 @@ describe("AlexaGenerator", function() {
           entities: [],
         },
       ];
-      this.entityMapping = {};
-
-      this.customEntityMapping = {};
 
       this.expectedSchema = {
         interactionModel: {
@@ -408,9 +365,6 @@ describe("AlexaGenerator", function() {
   describe("with single intent, utterances and registerd custom slot type entity", function(this: CurrentThisContext) {
     beforeEach(async function(this: CurrentThisContext) {
       this.componentMetadata.configuration.entities.ENTITIES_TYPE = "@TYPE";
-
-      this.alexaGenerator = new AlexaGenerator(this.componentMetadata);
-      this.language = "en";
 
       this.intentConfigurations = [
         {
@@ -461,9 +415,7 @@ describe("AlexaGenerator", function() {
   describe("with single intent, utterances and unregisterd custom slot type entity", function(this: CurrentThisContext) {
     beforeEach(async function(this: CurrentThisContext) {
       this.componentMetadata.configuration.entities.ENTITIES_TYPE = "@TYPE";
-
       this.alexaGenerator = new AlexaGenerator(this.componentMetadata);
-      this.language = "en";
 
       this.intentConfigurations = [
         {
@@ -472,7 +424,7 @@ describe("AlexaGenerator", function() {
           entities: ["correct"],
         },
       ];
-      this.entityMapping = {};
+
       this.customEntityMapping = {
         ENTITIES_TYPE: [{ value: "correct" }],
       };
@@ -523,9 +475,6 @@ describe("AlexaGenerator", function() {
   describe("with single intent, utterances, entities but invalid invocation name", function(this: CurrentThisContext) {
     beforeEach(async function(this: CurrentThisContext) {
       this.componentMetadata.configuration.invocationName = "WRONGinvocationName";
-
-      this.alexaGenerator = new AlexaGenerator(this.componentMetadata);
-      this.language = "en";
 
       this.intentConfigurations = [
         {
