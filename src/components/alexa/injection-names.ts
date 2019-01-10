@@ -7,5 +7,5 @@ export const componentInjectionNames = {
   /**
    * Inject an instance of @type {AlexaHandler}
    */
-  alexaResponseHandler: "current-response-handler",
+  alexaResponseHandler: "alexa:current-response-handler",
 };
