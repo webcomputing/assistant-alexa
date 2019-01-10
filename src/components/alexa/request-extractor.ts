@@ -10,10 +10,10 @@ import {
 } from "assistant-source";
 import { inject, injectable } from "inversify";
 import { Component } from "inversify-components";
+import { componentInjectionNames } from "./injection-names";
 import { amazonToGenericIntent as dictionary } from "./intent-dict";
 import { COMPONENT_NAME, Configuration } from "./private-interfaces";
 import { AlexaRequestContext, askInterfaces, ExtractionInterface } from "./public-interfaces";
-
 @injectable()
 export class RequestExtractor implements AssistantJSRequestExtractor {
   public component: Component<Configuration.Runtime>;
@@ -22,7 +22,7 @@ export class RequestExtractor implements AssistantJSRequestExtractor {
   private logger: Logger;
 
   constructor(
-    @inject("meta:component//alexa") componentMeta: Component<Configuration.Runtime>,
+    @inject(componentInjectionNames.alexaComponent) componentMeta: Component<Configuration.Runtime>,
     @inject(injectionNames.componentSpecificLoggerFactory) loggerFactory: ComponentSpecificLoggerFactory
   ) {
     this.component = componentMeta;
