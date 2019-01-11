@@ -1,6 +1,6 @@
 import { HandlerProxyFactory, injectionNames, intent as Intent, PlatformSpecHelper, RequestContext, SpecHelper } from "assistant-source";
 import { AlexaHandler } from "./components/alexa/handler";
-import { componentInjectionNames } from "./components/alexa/injection-names";
+import { alexaInjectionNames } from "./components/alexa/injection-names";
 import { AlexaSpecificHandable, AlexaSpecificTypes, ExtractionInterface } from "./components/alexa/public-interfaces";
 
 export class AlexaSpecHelper implements PlatformSpecHelper<AlexaSpecificTypes, AlexaSpecificHandable<AlexaSpecificTypes>> {
@@ -33,16 +33,16 @@ export class AlexaSpecHelper implements PlatformSpecHelper<AlexaSpecificTypes, A
     this.specHelper.createRequestScope(extraction, context);
 
     // Bind handler as singleton
-    this.specHelper.assistantJs.container.inversifyInstance.unbind(componentInjectionNames.alexaResponseHandler);
+    this.specHelper.assistantJs.container.inversifyInstance.unbind(alexaInjectionNames.current.responseHandler);
     this.specHelper.assistantJs.container.inversifyInstance
-      .bind(componentInjectionNames.alexaResponseHandler)
+      .bind(alexaInjectionNames.current.responseHandler)
       .to(AlexaHandler)
       .inSingletonScope();
 
     const proxyFactory = this.specHelper.assistantJs.container.inversifyInstance.get<HandlerProxyFactory>(injectionNames.handlerProxyFactory);
 
     const currentHandler = this.specHelper.assistantJs.container.inversifyInstance.get<AlexaSpecificHandable<AlexaSpecificTypes>>(
-      componentInjectionNames.alexaResponseHandler
+      alexaInjectionNames.current.responseHandler
     );
     const proxiedHandler = proxyFactory.createHandlerProxy(currentHandler);
 

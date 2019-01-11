@@ -1,11 +1,16 @@
 /** Names of injectionable services, leads to fewer typing errors for most important injections */
-export const componentInjectionNames = {
+export const alexaInjectionNames = {
   /**
    * Inject an instance of @type {Component<Configuration.Runtime>}
    */
-  alexaComponent: "meta:component//alexa",
+  component: "meta:component//alexa",
   /**
-   * Inject an instance of @type {AlexaHandler}
+   * Namespace for services which are only available in the request scope.
    */
-  alexaResponseHandler: "alexa:current-response-handler",
+  current: {
+    /**
+     * Inject an instance of @type {AlexaHandler}
+     */
+    responseHandler: "alexa:current-response-handler",
+  },
 };
