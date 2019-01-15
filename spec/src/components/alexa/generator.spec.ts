@@ -46,11 +46,13 @@ describe("AlexaGenerator", function() {
     /** Disable reading and writing files from file system */
     (fs.mkdirSync as any) = jasmine.createSpy("mkdirSync").and.callFake(() => {});
     (fs.writeFileSync as any) = jasmine.createSpy("writeFileSync").and.callFake(() => {});
-    JSON.stringify = (...params) => params[0];
 
     /** Spy on console log */
     // tslint:disable-next-line:no-console
     console.warn = jasmine.createSpy("warn");
+
+    /** Disable JSON.stringify ability. It allows to use jasmine.any or jasmine.anything in expect check. */
+    JSON.stringify = (...params) => params[0];
 
     /** Set default parameter */
     this.params = {} as any;
@@ -93,9 +95,11 @@ describe("AlexaGenerator", function() {
   });
 
   afterEach(async function(this: CurrentThisContext) {
-    // Reset mocked fs functions
+    /** Reset mocked fs functions */
     (fs as any).mkdirSync = mkdirSync;
     (fs as any).writeFileSync = writeFileSync;
+
+    /** Reset ability of JSON.stringify */
     JSON.stringify = stringify;
 
     /** Reset spied waring method */
