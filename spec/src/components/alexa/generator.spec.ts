@@ -26,12 +26,6 @@ interface CurrentThisContext extends ThisContext {
     customEntityMapping: PlatformGenerator.CustomEntityMapping;
   };
 
-  defaultExpectedData: {
-    invocationName: string;
-    intents: IntentSchema[];
-    types: any[];
-  };
-
   /** Returns an new instance of the AlexaGenerator */
   getAlexaGenerator: () => AlexaGenerator;
 
@@ -39,18 +33,20 @@ interface CurrentThisContext extends ThisContext {
   execAlexaGenerator: () => ReturnType<AlexaGenerator["execute"]>;
 
   /** Helper function for expected write to schema functionality */
-  itWriteToSchemaWith: (params?: { invocationName?: string; intents?: IntentSchema[]; types?: any[] }) => void;
+  expectSchemaWith: (params?: { invocationName?: string; intents?: IntentSchema[]; types?: any[] }) => void;
 }
 
 // Original functions which are going to be mocked
 const { mkdirSync, writeFileSync } = fs;
 const { warn } = console;
+const { stringify } = JSON;
 
 describe("AlexaGenerator", function() {
   beforeEach(async function(this: CurrentThisContext) {
     /** Disable reading and writing files from file system */
     (fs.mkdirSync as any) = jasmine.createSpy("mkdirSync").and.callFake(() => {});
     (fs.writeFileSync as any) = jasmine.createSpy("writeFileSync").and.callFake(() => {});
+    JSON.stringify = (...params) => params[0];
 
     /** Spy on console log */
     // tslint:disable-next-line:no-console
@@ -64,11 +60,6 @@ describe("AlexaGenerator", function() {
     this.params.entityMapping = {};
     this.params.customEntityMapping = {};
 
-    this.defaultExpectedData = {
-      invocationName: "invocationname",
-      intents: [],
-      types: [],
-    };
     this.componentMetaData = this.container.inversifyInstance.get(getMetaInjectionName(COMPONENT_NAME));
     this.componentMetaData.configuration.entities = {};
 
@@ -87,17 +78,17 @@ describe("AlexaGenerator", function() {
       );
     };
 
-    this.itWriteToSchemaWith = (params: { invocationName?: string; intents?: IntentSchema[]; types?: any[] } = {}) => {
+    this.expectSchemaWith = (params: { invocationName?: string; intents?: IntentSchema[]; types?: any[] } = {}) => {
       const expectedReturnValue = {
         interactionModel: {
           languageModel: {
-            invocationName: params.invocationName || this.defaultExpectedData.invocationName,
-            intents: params.intents || this.defaultExpectedData.intents,
-            types: params.types || this.defaultExpectedData.types,
+            invocationName: params.invocationName || (jasmine.any(String) as any),
+            intents: params.intents || (jasmine.any(Array) as any),
+            types: params.types || (jasmine.any(Array) as any),
           },
         },
       };
-      expect(fs.writeFileSync).toHaveBeenCalledWith(`${this.params.buildDir}/alexa/schema.json`, JSON.stringify(expectedReturnValue, null, 2));
+      expect(fs.writeFileSync).toHaveBeenCalledWith(`${this.params.buildDir}/alexa/schema.json`, expectedReturnValue);
     };
   });
 
@@ -105,6 +96,7 @@ describe("AlexaGenerator", function() {
     // Reset mocked fs functions
     (fs as any).mkdirSync = mkdirSync;
     (fs as any).writeFileSync = writeFileSync;
+    JSON.stringify = stringify;
 
     /** Reset spied waring method */
     // tslint:disable-next-line:no-console
@@ -135,7 +127,7 @@ describe("AlexaGenerator", function() {
       });
 
       it("maps transmitted intent configuration to alexa specific ones", async function(this: CurrentThisContext) {
-        this.itWriteToSchemaWith({
+        this.expectSchemaWith({
           intents: [
             { name: this.params.intentConfigurations[0].intent as string, slots: [], samples: this.params.intentConfigurations[0].utterances as string[] },
           ],
@@ -165,28 +157,30 @@ describe("AlexaGenerator", function() {
 
         describe("without defined entities in the component configuration", function() {
           beforeEach(async function(this: CurrentThisContext) {
-            this.defaultExpectedData.types = [{ name: "ENTITIES_TYPE", values: [{ name: { value: "entity1" } }] }];
-            this.defaultExpectedData.intents = [
-              { name: this.params.intentConfigurations[0].intent as string, slots: [{ name: "entity1", type: "ENTITIES_TYPE" }], samples: ["hello {entity1}"] },
-            ];
             await this.execAlexaGenerator();
           });
 
           it("maps transmitted intent configuration to alexa specific ones", async function(this: CurrentThisContext) {
-            this.itWriteToSchemaWith({
-              intents: this.defaultExpectedData.intents,
+            this.expectSchemaWith({
+              intents: [
+                {
+                  name: this.params.intentConfigurations[0].intent as string,
+                  slots: [{ name: "entity1", type: "ENTITIES_TYPE" }],
+                  samples: ["hello {entity1}"],
+                },
+              ],
             });
           });
 
           it("transfers custom entity mapping to alexa specific type definition", async function(this: CurrentThisContext) {
-            this.itWriteToSchemaWith({
-              types: this.defaultExpectedData.types,
+            this.expectSchemaWith({
+              types: [{ name: "ENTITIES_TYPE", values: [{ name: { value: "entity1" } }] }],
             });
           });
 
           it("pass invocation name", async function(this: CurrentThisContext) {
-            this.itWriteToSchemaWith({
-              invocationName: this.defaultExpectedData.invocationName,
+            this.expectSchemaWith({
+              invocationName: this.componentMetaData.configuration.invocationName,
             });
           });
         });
@@ -194,23 +188,20 @@ describe("AlexaGenerator", function() {
         describe("with defined entities in the component configuration (custom slot types)", function() {
           beforeEach(async function(this: CurrentThisContext) {
             this.componentMetaData.configuration.entities = { ENTITIES_TYPE: "@TYPE" };
-
-            this.defaultExpectedData.types = [{ name: "@TYPE", values: [{ name: { value: "entity1" } }] }];
-            this.defaultExpectedData.intents = [
-              { name: this.params.intentConfigurations[0].intent as string, slots: [{ name: "entity1", type: "@TYPE" }], samples: ["hello {entity1}"] },
-            ];
             await this.execAlexaGenerator();
           });
 
           it("transmits defined entity as a custom slot type", async function(this: CurrentThisContext) {
-            this.itWriteToSchemaWith({
-              types: this.defaultExpectedData.types,
+            this.expectSchemaWith({
+              types: [{ name: "@TYPE", values: [{ name: { value: "entity1" } }] }],
             });
           });
 
           it("references custom slot type in the intent definition", async function(this: CurrentThisContext) {
-            this.itWriteToSchemaWith({
-              intents: this.defaultExpectedData.intents,
+            this.expectSchemaWith({
+              intents: [
+                { name: this.params.intentConfigurations[0].intent as string, slots: [{ name: "entity1", type: "@TYPE" }], samples: ["hello {entity1}"] },
+              ],
             });
           });
         });
@@ -236,18 +227,18 @@ describe("AlexaGenerator", function() {
       describe("without entities", function() {
         beforeEach(async function(this: CurrentThisContext) {
           this.params.intentConfigurations = [{ intent: "helloWorld", utterances: ["hello world", "hello earth", "Salon world", "Salon earth"], entities: [] }];
-          this.defaultExpectedData.intents = [{ name: this.params.intentConfigurations[0].intent as string, slots: [], samples: [] }];
           await this.execAlexaGenerator();
         });
         it("returns all given utterances", async function(this: CurrentThisContext) {
-          this.defaultExpectedData.intents[0].samples = this.params.intentConfigurations[0].utterances;
-          this.itWriteToSchemaWith();
+          this.expectSchemaWith({
+            intents: [{ name: jasmine.anything() as any, slots: [], samples: jasmine.any(Array) as any }],
+          });
         });
 
         it("returns an empty array of intent configurations slots", async function(this: CurrentThisContext) {
-          this.defaultExpectedData.intents[0].samples = this.params.intentConfigurations[0].utterances;
-          this.defaultExpectedData.intents[0].slots = [];
-          this.itWriteToSchemaWith();
+          this.expectSchemaWith({
+            intents: [{ name: jasmine.anything() as any, slots: jasmine.any(Array) as any, samples: this.params.intentConfigurations[0].utterances }],
+          });
         });
       });
 
@@ -259,22 +250,31 @@ describe("AlexaGenerator", function() {
           this.params.entityMapping = { type: "ENTITIES_TYPE", type2: "ENTITIES_TYPE_2", ENTITIES_TYPE: "ENTITIES_TYPE", ENTITIES_TYPE_2: "ENTITIES_TYPE_2" };
           this.componentMetaData.configuration.entities = { ENTITIES_TYPE: "type", ENTITIES_TYPE_2: "type2" };
 
-          this.defaultExpectedData.intents = [
-            { name: this.params.intentConfigurations[0].intent as string, slots: [], samples: ["hello {type}, how are {type2}"] },
-          ];
-          this.defaultExpectedData.intents[0].slots = [{ name: "type", type: "type" }, { name: "type2", type: "type2" }];
-
           await this.execAlexaGenerator();
         });
 
         it("returns all given slot type from utterances", async function(this: CurrentThisContext) {
-          this.defaultExpectedData.intents[0].slots = [{ name: "type", type: "type" }, { name: "type2", type: "type2" }];
-          this.itWriteToSchemaWith();
+          this.expectSchemaWith({
+            intents: [
+              {
+                name: jasmine.anything() as any,
+                slots: [{ name: "type", type: "type" }, { name: "type2", type: "type2" }],
+                samples: jasmine.any(Array) as any,
+              },
+            ],
+          });
         });
 
         it("removes entities examples", async function(this: CurrentThisContext) {
-          this.defaultExpectedData.intents[0].samples = ["hello {type}, how are {type2}"];
-          this.itWriteToSchemaWith();
+          this.expectSchemaWith({
+            intents: [
+              {
+                name: jasmine.anything() as any,
+                slots: jasmine.any(Array) as any,
+                samples: ["hello {type}, how are {type2}"],
+              },
+            ],
+          });
         });
       });
     });
@@ -286,7 +286,7 @@ describe("AlexaGenerator", function() {
       });
 
       it("replace the given one with an default invocationName", async function(this: CurrentThisContext) {
-        this.itWriteToSchemaWith({ invocationName: "setup-your-invocation-name-in-config" });
+        this.expectSchemaWith({ invocationName: "setup-your-invocation-name-in-config" });
       });
 
       it("returns an invalid name warning", async function(this: CurrentThisContext) {
@@ -304,7 +304,7 @@ describe("AlexaGenerator", function() {
         });
 
         it("returns an empty utterances array", async function(this: CurrentThisContext) {
-          this.itWriteToSchemaWith({ intents: [{ name: "AMAZON.YesIntent", slots: [], samples: [] }] });
+          this.expectSchemaWith({ intents: [{ name: "AMAZON.YesIntent", slots: [], samples: [] }] });
         });
       });
 
@@ -327,7 +327,7 @@ describe("AlexaGenerator", function() {
       });
 
       it("removes the intent from the schema definition", async function(this: CurrentThisContext) {
-        this.itWriteToSchemaWith({ intents: [] });
+        this.expectSchemaWith({ intents: [] });
       });
 
       it("returns an could not convert all intents warning", async function(this: CurrentThisContext) {
