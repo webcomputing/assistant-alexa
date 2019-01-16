@@ -1,4 +1,12 @@
-import { HandlerProxyFactory, injectionNames, intent as Intent, PlatformSpecHelper, RequestContext, SpecHelper } from "assistant-source";
+import {
+  HandlerProxyFactory,
+  injectionNames,
+  intent as Intent,
+  PlatformSpecHelper,
+  RequestContext,
+  SpecHelper,
+  UnsupportedFeatureSupportForHandables,
+} from "assistant-source";
 import { AlexaHandler } from "./components/alexa/handler";
 import { AlexaSpecificHandable, AlexaSpecificTypes, ExtractionInterface } from "./components/alexa/public-interfaces";
 
@@ -40,9 +48,9 @@ export class AlexaSpecHelper implements PlatformSpecHelper<AlexaSpecificTypes, A
 
     const proxyFactory = this.specHelper.assistantJs.container.inversifyInstance.get<HandlerProxyFactory>(injectionNames.handlerProxyFactory);
 
-    const currentHandler = this.specHelper.assistantJs.container.inversifyInstance.get<AlexaSpecificHandable<AlexaSpecificTypes>>(
-      "alexa:current-response-handler"
-    );
+    const currentHandler = this.specHelper.assistantJs.container.inversifyInstance.get<
+      AlexaSpecificHandable<AlexaSpecificTypes> & UnsupportedFeatureSupportForHandables
+    >("alexa:current-response-handler");
     const proxiedHandler = proxyFactory.createHandlerProxy(currentHandler);
 
     return proxiedHandler;
