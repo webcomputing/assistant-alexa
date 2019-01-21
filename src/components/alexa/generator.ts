@@ -2,13 +2,14 @@
 import { GenericIntent, PlatformGenerator } from "assistant-source";
 import * as fs from "fs";
 import { inject, injectable } from "inversify";
-import { Component } from "inversify-components";
+import { Component, getMetaInjectionName } from "inversify-components";
+import { alexaInjectionNames } from "./injection-names";
 import { genericIntentToAmazon } from "./intent-dict";
-import { Configuration } from "./private-interfaces";
+import { COMPONENT_NAME, Configuration } from "./private-interfaces";
 
 @injectable()
 export class AlexaGenerator implements PlatformGenerator.Extension {
-  constructor(@inject("meta:component//alexa") private component: Component<Configuration.Runtime>) {}
+  constructor(@inject(getMetaInjectionName(COMPONENT_NAME)) private component: Component<Configuration.Runtime>) {}
 
   public execute(
     language: string,

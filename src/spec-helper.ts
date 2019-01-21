@@ -8,6 +8,7 @@ import {
   UnsupportedFeatureSupportForHandables,
 } from "assistant-source";
 import { AlexaHandler } from "./components/alexa/handler";
+import { alexaInjectionNames } from "./components/alexa/injection-names";
 import { AlexaSpecificHandable, AlexaSpecificTypes, ExtractionInterface } from "./components/alexa/public-interfaces";
 
 export class AlexaSpecHelper implements PlatformSpecHelper<AlexaSpecificTypes, AlexaSpecificHandable<AlexaSpecificTypes>> {
@@ -40,9 +41,9 @@ export class AlexaSpecHelper implements PlatformSpecHelper<AlexaSpecificTypes, A
     this.specHelper.createRequestScope(extraction, context);
 
     // Bind handler as singleton
-    this.specHelper.assistantJs.container.inversifyInstance.unbind("alexa:current-response-handler");
+    this.specHelper.assistantJs.container.inversifyInstance.unbind(alexaInjectionNames.current.responseHandler);
     this.specHelper.assistantJs.container.inversifyInstance
-      .bind("alexa:current-response-handler")
+      .bind(alexaInjectionNames.current.responseHandler)
       .to(AlexaHandler)
       .inSingletonScope();
 
@@ -50,7 +51,8 @@ export class AlexaSpecHelper implements PlatformSpecHelper<AlexaSpecificTypes, A
 
     const currentHandler = this.specHelper.assistantJs.container.inversifyInstance.get<
       AlexaSpecificHandable<AlexaSpecificTypes> & UnsupportedFeatureSupportForHandables
-    >("alexa:current-response-handler");
+    >(alexaInjectionNames.current.responseHandler);
+
     const proxiedHandler = proxyFactory.createHandlerProxy(currentHandler);
 
     return proxiedHandler;
