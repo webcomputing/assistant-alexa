@@ -45,4 +45,15 @@ As you can see, you need to configure your amazon alexa `applicationID` in order
 If you start your AssistantJS server with `FORCED_ALEXA_OAUTH_TOKEN="mytoken"`, all alexa requests will return "mytoken" as OAuth token.
 That way, you can test or demo your skill without having a full OAuth setup in place.
 
+
+#### Deployment
+
+With the command `assistant deploy` you will be able to upload your generated Skill configuration to your configured Alexa agent.
+For this process we use the Alexa own CLI interface `ask-cli`. You need to install this package before you can use the `assistant deploy` command.
+
+We recommend you to use at leased the version 1.6.2 of the ask-cli package. You can install it using npm by the command `npm i -g ask-cli`.
+
+After you have installed ask-cli you have to run `ask init` and link you alexa account. Proper information about the ASK CLI you can find on the [official documentation](https://developer.amazon.com/de/docs/smapi/quick-start-alexa-skills-kit-command-line-interface.html).
+
+
 [1]: http://assistantjs.org
