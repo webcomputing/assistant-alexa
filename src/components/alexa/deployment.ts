@@ -3,7 +3,7 @@ import { execSync } from "child_process";
 import * as fs from "fs";
 import { inject, injectable } from "inversify";
 import { Component, getMetaInjectionName } from "inversify-components";
-import { COMPONENT_NAME, Configuration } from "./private-interfaces";
+import { AlexaSkillSchema, COMPONENT_NAME, Configuration } from "./private-interfaces";
 
 @injectable()
 export class AlexaDeployment implements CLIDeploymentExtension {
@@ -13,41 +13,76 @@ export class AlexaDeployment implements CLIDeploymentExtension {
   ) {}
 
   public async execute(buildPath: string) {
+    // tslint:disable-next-line:no-console
+    console.log("===============     APIAI DEPLOYMENT     ===============");
     // Reads all given languages from folder structure.
     const countryCodes = fs.readdirSync(`${buildPath}`);
     if (!countryCodes || countryCodes.length === 0) {
       throw new Error("There is no configuration given: Please execute the 'assistant generator' before uploading the current configuration.");
     }
     if (this.isAskInstalled()) {
+      this.deploySkillSchema(buildPath, countryCodes);
+
       await Promise.all(
         countryCodes.map(async countryCode => {
-          try {
-            // Execute the ask update model command. e.g. 'ask api update-model -s schema.json -l de-DE'
-            const updateModelExecution = execSync(
-              `ask api update-model -s ${this.componentMeta.configuration.applicationID} -f ${buildPath}/${countryCode}/alexa/schema.json -l ${languageMapping(
-                countryCode
-              )}`
-            );
-            console.log("##############################################################################################");
-            console.log(updateModelExecution.toString());
-            console.log("##############################################################################################");
-
-            console.log(`Interaction model building: ${this.status(countryCode)}`);
-          } catch (error) {
-            console.log(error);
-
-            this.logger.error(error);
-            // Exit Process if upload failed
-            return;
-          }
+          const currentLocale = languageMapping(countryCode);
+          await this.exportModel(buildPath, currentLocale);
+          await this.updateModel(buildPath, countryCode, currentLocale);
 
           // Wait until the model upload is out of state in progress.
           await this.whileModelIsInProgress(countryCode);
-          console.log("##############################################################################################");
         })
       );
+      // tslint:disable-next-line:no-console
+      console.log("============        FINISHED.             ============");
     }
     return;
+  }
+
+  /**
+   * Get the current deployed model schema from the 'alexa developer console'
+   * @param locale locale of the model definition like 'de-DE' or 'en-GB'
+   * @returns skill model
+   */
+  private async getModel(locale: string) {
+    const modelSchema = execSync(`ask api get-model -s ${this.componentMeta.configuration.applicationID} -l ${locale}`);
+    return JSON.parse(modelSchema.toString());
+  }
+
+  private async updateModel(buildPath: string, countryCode: string, locale: string) {
+    try {
+      // Execute the ask update model command. e.g. 'ask api update-model -s schema.json -l de-DE'
+      const updateModelExecution = execSync(
+        `ask api update-model -s ${this.componentMeta.configuration.applicationID} -f ${buildPath}/${countryCode}/alexa/schema.json -l ${locale}`
+      );
+
+      /**
+       * Show debug output only if the model could not be submitted.
+       */
+      if (!updateModelExecution.toString().includes(`Model for ${locale} submitted.`)) {
+        // tslint:disable-next-line:no-console
+        console.log("##############################################################################################");
+        // tslint:disable-next-line:no-console
+        console.log(updateModelExecution.toString());
+        // tslint:disable-next-line:no-console
+        console.log("##############################################################################################");
+      }
+
+      this.logModelBuildStatus(countryCode);
+    } catch (error) {
+      this.logger.error(error);
+      // Exit Process if upload failed
+      return;
+    }
+  }
+
+  private async exportModel(buildPath: string, locale: string) {
+    const model = await this.getModel(locale);
+    try {
+      fs.writeFileSync(`${buildPath}/deployments/alexa/schema_${locale}.json`, JSON.stringify(model, null, 2));
+    } catch (error) {
+      this.logger.error(error);
+    }
   }
 
   /**
@@ -57,8 +92,23 @@ export class AlexaDeployment implements CLIDeploymentExtension {
    */
   private status(countryCode: string) {
     const skillStatus = execSync(`ask api get-skill-status -s ${this.componentMeta.configuration.applicationID}`);
+    const parsedSkillStatus = JSON.parse(skillStatus.toString());
 
-    return JSON.parse(skillStatus.toString()).interactionModel[languageMapping(countryCode)].lastUpdateRequest.status;
+    if (
+      parsedSkillStatus &&
+      parsedSkillStatus.interactionModel &&
+      parsedSkillStatus.interactionModel[languageMapping(countryCode)] &&
+      parsedSkillStatus.interactionModel[languageMapping(countryCode)].lastUpdateRequest &&
+      parsedSkillStatus.interactionModel[languageMapping(countryCode)].lastUpdateRequest.status
+    ) {
+      return parsedSkillStatus.interactionModel[languageMapping(countryCode)].lastUpdateRequest.status;
+    }
+    return "ERROR";
+  }
+
+  private logModelBuildStatus(countryCode: string) {
+    // tslint:disable-next-line:no-console
+    console.log(`Amazon model building for ${languageMapping(countryCode)}: ${this.status(countryCode)}`);
   }
 
   /**
@@ -69,7 +119,9 @@ export class AlexaDeployment implements CLIDeploymentExtension {
     const startTime: number = Date.now();
     const untilStateInProgress = new Promise((resolve, reject) => {
       const interval = setInterval(() => {
-        if (this.status(countryCode) !== "IN_PROGRESS") {
+        const state = this.status(countryCode);
+        if (state !== "IN_PROGRESS") {
+          this.logModelBuildStatus(countryCode);
           // Clear setInterval and reduce memory use
           clearInterval(interval);
           // Resolve Promise because status is out of state IN_PROGRESS
@@ -77,13 +129,13 @@ export class AlexaDeployment implements CLIDeploymentExtension {
         }
 
         // If a timeout of 2 minutes will reach, the Promise will be rejected and the interval will be cleared
-        if (Date.now() - startTime > 120) {
+        if (Date.now() - startTime > 120000) {
           clearInterval(interval);
-          reject();
+          reject("Model building runs in a timeout exception.");
         }
       }, 1000);
     });
-    console.log(`Building ${this.status(countryCode)}`);
+
     return untilStateInProgress;
   }
 
@@ -97,10 +149,13 @@ export class AlexaDeployment implements CLIDeploymentExtension {
       // Execute the ask command line tool for indicating the current installed version. If this command will be executable we know that the cli tool is installed
       aksVersion = execSync("ask --version");
     } catch (e) {
+      // tslint:disable-next-line:no-console
       console.error("##############################################################################################");
+      // tslint:disable-next-line:no-console
       console.error(
         `The ask-cli is currently not installed. Please install it using 'npm i -g ask-cli'.\n After installation you have to run the command 'ask init' and login to the developer console with your \namazon developer account.`
       );
+      // tslint:disable-next-line:no-console
       console.error("##############################################################################################");
       return false;
     }
@@ -116,6 +171,120 @@ export class AlexaDeployment implements CLIDeploymentExtension {
       return true;
     }
     throw new Error("Unsupported ask-cli version installed: Please install at leased version 1.6.2");
+  }
+
+  /**
+   * Export the current skill configuration as a JSON file in the build directory.
+   * @param buildPath Path to the current build folder like 'builds/1550067893551'
+   */
+  private exportCurrentSkillSchema(buildPath: string) {
+    /**
+     * Get the current skill configuration.
+     */
+    const currentSkillSchema = execSync(`ask api get-skill -s ${this.componentMeta.configuration.applicationID}`).toString();
+
+    fs.mkdirSync(`${buildPath}/deployments/`);
+    fs.mkdirSync(`${buildPath}/deployments/alexa/`);
+    fs.writeFileSync(`${buildPath}/deployments/alexa/skill-backup.json`, currentSkillSchema);
+  }
+
+  /**
+   * Get the current alexa skill configuration from disk.
+   * @param buildPath Path to the current build folder like 'builds/1550067893551'
+   * @returns skill schema as @type {AlexaSkillSchema}
+   */
+  private getCurrentSkillSchema(buildPath: string) {
+    if (!fs.existsSync(`${buildPath}/deployments/alexa/skill-backup.json`)) {
+      this.exportCurrentSkillSchema(buildPath);
+    }
+    const alexaSkillSchema: AlexaSkillSchema = JSON.parse(fs.readFileSync(`${buildPath}/deployments/alexa/skill-backup.json`).toString());
+    return alexaSkillSchema;
+  }
+
+  /**
+   * Generates the locales schema form the given country codes
+   * @param skillSchema @type {AlexaSkillSchema} witch should be updated
+   * @param countryCodes Array of country codes like ["de", "en"]
+   * @returns locales schema @type {AlexaSkillSchema["manifest"]["publishingInformation"]["locales"]}
+   */
+  private generateLocalesDefinition(skillSchema: AlexaSkillSchema, countryCodes: string[]) {
+    const configuredLocales = Object.keys(skillSchema.manifest.publishingInformation.locales);
+    let localesDefinitions;
+
+    if (JSON.stringify(configuredLocales.sort()) !== JSON.stringify(countryCodes.map(countryCode => languageMapping(countryCode)).sort())) {
+      // tslint:disable-next-line:no-console
+      console.log("Skill schema will be updated because the language definitions are incorrect. Missing languages.");
+
+      /**
+       * Creates the locales definition schema. It creates an Object with all given languages and there invocation name.
+       * Currently AssistantJS will not support multi lingual invocation name so
+       */
+      localesDefinitions = countryCodes
+        .map(countryCode => {
+          return {
+            [languageMapping(countryCode)]: {
+              name: this.componentMeta.configuration.invocationName,
+            },
+          };
+        })
+        .reduce((previousValue, currentValue) => {
+          return { ...previousValue, ...currentValue };
+        });
+    }
+    return localesDefinitions;
+  }
+
+  /**
+   * Update the alexa skill configuration.
+   * @param buildPath Path to the current build folder like 'builds/1550067893551'
+   * @param countryCodes Array of country codes like ["de", "en"]
+   * @param skillSchema @type {AlexaSkillSchema} witch should be updated
+   */
+  private async updateSkillSchema(buildPath: string, countryCodes: string[], skillSchema: AlexaSkillSchema) {
+    fs.writeFileSync(`${buildPath}/deployments/alexa/skill.json`, JSON.stringify(skillSchema, null, 2));
+
+    const updateSkillResult = execSync(
+      `ask api update-skill -s ${this.componentMeta.configuration.applicationID} -f ${buildPath}/deployments/alexa/skill.json`
+    );
+    // tslint:disable-next-line:no-console
+    console.log("##############################################################################################");
+    // tslint:disable-next-line:no-console
+    console.log(updateSkillResult.toString());
+    // tslint:disable-next-line:no-console
+    console.log("##############################################################################################");
+
+    await Promise.all(countryCodes.map(countryCode => this.whileModelIsInProgress(countryCode)));
+  }
+
+  /**
+   * Deploy the skill schema if the current configured languages will not be match with the 'alexa developer console' configuration.
+   * @param buildPath Path to the current build folder like 'builds/1550067893551'
+   * @param countryCodes Array of country codes like ["de", "en"]
+   */
+  private async deploySkillSchema(buildPath: string, countryCodes: string[]) {
+    /**
+     * Get the current skill configuration.
+     */
+    const currentSkillSchema = this.getCurrentSkillSchema(buildPath);
+
+    /**
+     * Generates a new locales schema from the given country codes
+     */
+    const localesDefinitions = this.generateLocalesDefinition(currentSkillSchema, countryCodes);
+
+    /**
+     * If new locales will be given, we have to update the skill with all configured locales.
+     */
+    if (localesDefinitions) {
+      /**
+       * Reset the configured locales in the 'alexa developer console'.
+       * Only languages witch will configured in the voice application should be deployed.
+       * Models from non configured languages will be deleted!!!
+       */
+      currentSkillSchema.manifest.publishingInformation.locales = localesDefinitions;
+
+      await this.updateSkillSchema(buildPath, countryCodes, currentSkillSchema);
+    }
   }
 }
 
