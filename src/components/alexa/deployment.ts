@@ -76,6 +76,11 @@ export class AlexaDeployment implements CLIDeploymentExtension {
     }
   }
 
+  /**
+   * Export the currently deployed alexa model and store it to the given buildPath
+   * @param buildPath Path to the current build folder. like {root}/builds/123456789
+   * @param locale LCID Code
+   */
   private async exportModel(buildPath: string, locale: string) {
     const model = await this.getModel(locale);
     try {
@@ -106,6 +111,10 @@ export class AlexaDeployment implements CLIDeploymentExtension {
     return "ERROR";
   }
 
+  /**
+   * Print the current build status to the console
+   * @param countryCode country code as a string like 'de' or 'en'
+   */
   private logModelBuildStatus(countryCode: string) {
     // tslint:disable-next-line:no-console
     console.log(`Amazon model building for ${languageMapping(countryCode)}: ${this.status(countryCode)}`);
@@ -217,7 +226,7 @@ export class AlexaDeployment implements CLIDeploymentExtension {
 
       /**
        * Creates the locales definition schema. It creates an Object with all given languages and there invocation name.
-       * Currently AssistantJS will not support multi lingual invocation name so
+       * Currently AssistantJS will not support multi lingual invocation names so it's always the same name.
        */
       localesDefinitions = countryCodes
         .map(countryCode => {
@@ -290,12 +299,12 @@ export class AlexaDeployment implements CLIDeploymentExtension {
 
 /**
  * Alexa needs the locales in a LCID Format. Currently we use the country code for indicating the language.
- * This mapping function allows to get the LCID Code for the country code de or en.
- * If an unknown country code will be given, these will not be mapped it returned the code.
- * @param language country code as a string like de or en
+ * This mapping function allows you to get the LCID Code for the country codes: de or en.
+ * If an unknown country code will be given, these will not be mapped and the given country code will be returned.
+ * @param countryCode country code as a string like de or en
  * @returns LCID Code or country code as a string
  */
-const languageMapping = language => {
-  const languages = { de: "de-DE", en: "en-GB" };
-  return languages[language] || language;
+const languageMapping = countryCode => {
+  const countryCodeLanguageMapping = { de: "de-DE", en: "en-GB" };
+  return countryCodeLanguageMapping[countryCode] || countryCode;
 };

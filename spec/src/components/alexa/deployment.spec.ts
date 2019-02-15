@@ -11,7 +11,7 @@ interface CurrentThisContext extends ThisContext {
   alexaDeployment: AlexaDeployment;
   /** Includes the assistant-alexa specific component metadata */
   componentMeta: Component<Configuration.Runtime>;
-  /** Includes in instance of the current component logger */
+  /** Includes an instance of the current component logger */
   logger: Logger;
   /** Includes the build path used by the execute method */
   buildPath: string;
@@ -302,8 +302,8 @@ describe("AlexaDeployment", function() {
         });
       });
 
-      describe("with status IN_PROGRESS", function() {
-        describe("without timeout", function() {
+      describe("regarding waiting while model is in progress", function() {
+        describe("without timeout in whileModelIsInProgress", function() {
           beforeEach(async function(this: CurrentThisContext) {
             /**
              * Set the get skill status to return value SUCCEEDED
@@ -319,7 +319,7 @@ describe("AlexaDeployment", function() {
             );
 
             /**
-             * Create an spy o the private AlexaDeployment status method
+             * Create a spy on the private AlexaDeployment status method
              */
             (this.alexaDeployment as any).status = jasmine.createSpy("status").and.callThrough();
 
@@ -339,7 +339,7 @@ describe("AlexaDeployment", function() {
           });
         });
 
-        describe("with timeout", function() {
+        describe("with timeout in whileModelIsInProgress", function() {
           beforeEach(async function(this: CurrentThisContext) {
             /**
              * Set get skill status to IN_PROGRESS
