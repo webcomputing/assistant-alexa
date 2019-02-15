@@ -24,6 +24,7 @@ export namespace Configuration {
   export interface Runtime extends Defaults, Required {}
 }
 
+/** Schema from the alexa skill export */
 export interface AlexaSkillSchema {
   manifest: {
     apis: {
