@@ -233,15 +233,16 @@ describe("AlexaGenerator", function() {
           this.params.intentConfigurations = [{ intent: "helloWorld", utterances: ["hello world", "hello earth", "Salon world", "Salon earth"], entities: [] }];
           await this.execAlexaGenerator();
         });
-        it("returns all given utterances", async function(this: CurrentThisContext) {
+
+        it("returns all given samples (utterances)", async function(this: CurrentThisContext) {
           this.expectSchemaWith({
-            intents: [{ name: jasmine.anything() as any, slots: [], samples: jasmine.any(Array) as any }],
+            intents: [{ name: jasmine.anything() as any, slots: jasmine.any(Array) as any, samples: this.params.intentConfigurations[0].utterances }],
           });
         });
 
         it("returns an empty array of intent configurations slots", async function(this: CurrentThisContext) {
           this.expectSchemaWith({
-            intents: [{ name: jasmine.anything() as any, slots: jasmine.any(Array) as any, samples: this.params.intentConfigurations[0].utterances }],
+            intents: [{ name: jasmine.anything() as any, slots: [], samples: jasmine.any(Array) as any }],
           });
         });
       });
