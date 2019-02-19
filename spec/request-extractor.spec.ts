@@ -1,7 +1,9 @@
-import { RequestContext } from "assistant-source";
-import { RequestExtractor } from "../src/components/alexa/request-extractor";
-import { validRequestContext } from "./support/mocks/request-context";
+import { GenericIntent, RequestContext } from "assistant-source";
+// tslint:disable-next-line:no-submodule-imports
 import { componentInterfaces } from "assistant-source/lib/components/unifier/private-interfaces";
+import { RequestExtractor } from "../src/components/alexa/request-extractor";
+import { validRequestContext } from "./support/mocks/requests/intent-request";
+import { selectedElementRequestContext } from "./support/mocks/requests/selected-element-request";
 
 describe("RequestExtractor", function() {
   let extractor: RequestExtractor;
@@ -27,7 +29,10 @@ describe("RequestExtractor", function() {
       });
 
       it("throws error", function() {
-        return extractor.fits(context).then(result => fail()).catch(result => expect(true).toBeTruthy());
+        return extractor
+          .fits(context)
+          .then(result => fail())
+          .catch(result => expect(true).toBeTruthy());
       });
     });
 
@@ -38,11 +43,19 @@ describe("RequestExtractor", function() {
       });
 
       describe("when a valid (but signature missing) amazon request is given", function() {
+        beforeEach(async function() {
+          spyOn((extractor as any).logger, "error");
+        });
+
         it("returns true", function() {
           return extractor.fits(context).then(result => expect(result).toBeFalsy());
         });
+
+        it("calls logger", async function() {
+          return extractor.fits(context).then(result => expect((extractor as any).logger.error).toHaveBeenCalled());
+        });
       });
-    })
+    });
 
     describe("with wrong path", function() {
       beforeEach(function() {
@@ -66,18 +79,46 @@ describe("RequestExtractor", function() {
   });
 
   describe("extract", function() {
-    it("returns correct extraction", async function(done) {
-      this.extraction = await extractor.extract(context);
-      expect(this.extraction).toEqual({
-        sessionID: "alexa-SessionId.d391741c-a96f-4393-b7b4-ee76c81c24d3",
-        intent: "test",
-        entities: {"entity1": "entityvalue"},
-        language: "en",
-        platform: extractor.component.name,
-        oAuthToken: "mockOAuthToken",
-        temporalAuthToken: "temporalUserId"
+    describe("with IntentRequest", function() {
+      beforeEach(async function() {
+        this.extraction = await extractor.extract(context);
       });
-      done()
+
+      it("returns correct extraction", async function(done) {
+        expect(this.extraction).toEqual({
+          sessionID: "SessionId.d391741c-a96f-4393-b7b4-ee76c81c24d3",
+          sessionData: '{"mockAttribute":"mockValue","__current_state":"mockState"}',
+          intent: "test",
+          entities: { entity1: "entityvalue" },
+          language: "en",
+          platform: extractor.component.name,
+          oAuthToken: "mockOAuthToken",
+          temporalAuthToken: "temporalUserId",
+          requestTimestamp: "2017-06-24T16:00:18Z",
+        });
+        done();
+      });
+    });
+
+    describe("with SelectedElementRequest", function() {
+      beforeEach(async function() {
+        context = JSON.parse(JSON.stringify(selectedElementRequestContext));
+        this.extraction = await extractor.extract(context);
+      });
+
+      it("returns correct extraction", async function() {
+        expect(this.extraction).toEqual({
+          sessionID: "SessionId.d391741c-a96f-4393-b7b4-ee76c81c24d3",
+          sessionData: '{"mockAttribute":"mockValue","__current_state":"mockState"}',
+          intent: GenericIntent.Selected,
+          entities: { selectedElement: "my-selection" },
+          language: "en",
+          platform: extractor.component.name,
+          oAuthToken: "mockOAuthToken",
+          temporalAuthToken: "temporalUserId",
+          requestTimestamp: "2017-06-24T16:00:18Z",
+        });
+      });
     });
 
     describe("with FORCED_ALEXA_OAUTH_TOKEN environment variable given", function() {

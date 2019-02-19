@@ -32,6 +32,9 @@ export interface Defaults {
 export interface Required {
   /** Your amazon alexa application id */
   applicationID: string;
+
+  /** Your skill's invocation name to begin an interaction with */
+  invocationName: string;
 }
 ```
 

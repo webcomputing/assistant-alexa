@@ -4,6 +4,21 @@
     "**/*[sS]pec.js"
   ],
   "helpers": [
-    "helpers/**/*.js"
+    "helpers/**/*.ts"
+  ],
+  "reporters": [
+    {
+      "name": "jasmine-spec-reporter#SpecReporter",
+      "options": {
+        "spec": {
+          "displayStacktrace": "all",
+          "displaySuccessful": false,
+          "displayDuration": true,
+          "displayFailed": true,
+          "displayPending": true,
+          "displayErrorMessage": true
+        }
+      }
+    }
   ]
 }

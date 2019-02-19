@@ -1,27 +1,37 @@
+// tslint:disable:no-console
 import { GenericIntent, PlatformGenerator } from "assistant-source";
 import * as fs from "fs";
 import { inject, injectable } from "inversify";
-import { Component } from "inversify-components";
+import { Component, getMetaInjectionName } from "inversify-components";
+import { alexaInjectionNames } from "./injection-names";
 import { genericIntentToAmazon } from "./intent-dict";
-import { Configuration } from "./private-interfaces";
+import { COMPONENT_NAME, Configuration } from "./private-interfaces";
 
 @injectable()
 export class AlexaGenerator implements PlatformGenerator.Extension {
-  @inject("meta:component//alexa")
-  private component: Component<Configuration.Runtime>;
+  constructor(@inject(getMetaInjectionName(COMPONENT_NAME)) private component: Component<Configuration.Runtime>) {}
 
-  execute(language: string, buildDir: string, intentConfigurations: PlatformGenerator.IntentConfiguration[], parameterMapping: PlatformGenerator.EntityMapping) {
-    let currentBuildDir = buildDir + "/alexa";
+  public execute(
+    language: string,
+    buildDir: string,
+    intentConfigurations: PlatformGenerator.IntentConfiguration[],
+    entityMapping: PlatformGenerator.EntityMapping,
+    customEntityMapping: PlatformGenerator.CustomEntityMapping
+  ) {
+    const currentBuildDir = buildDir + "/alexa";
 
     console.log("================= PROCESSING ON ALEXA =================");
     console.log("Intents: #" + intentConfigurations.length + ", language: " + language);
 
     console.log("validating...");
-    let convertedIntents = this.prepareConfiguration(intentConfigurations);
+    const convertedIntents = this.prepareConfiguration(intentConfigurations);
+
+    console.log("building entities (" + Object.keys(customEntityMapping).length + ")...");
+    const customEntities = this.buildCustomEntities(customEntityMapping);
 
     console.log("building intent schema...");
-    let intentSchemas = this.buildIntentSchema(convertedIntents, parameterMapping);
-    const fullSchema = this.buildFullSchema(intentSchemas);
+    const intentSchema = this.buildIntentSchema(convertedIntents, entityMapping, customEntityMapping);
+    const fullSchema = this.buildFullSchema(intentSchema, customEntities);
 
     console.log("creating build directory: " + currentBuildDir);
     fs.mkdirSync(currentBuildDir);
@@ -32,22 +42,65 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
     console.log("=================      FINISHED.      =================");
   }
 
-  /** Returns Intent Schema for Amazon Alexa Config
+  /**
+   * Returns an entity schema for Alexa Config
+   * @param customEntityMapping
+   */
+  private buildCustomEntities(customEntityMapping: PlatformGenerator.CustomEntityMapping): TypeSchema[] {
+    const config = this.component.configuration;
+    const slotTypes: TypeSchema[] = [];
+
+    Object.keys(customEntityMapping).map(type => {
+      if (typeof config.entities[type] === "undefined") {
+        // Return Custom Slot Type
+        slotTypes.push({
+          name: type,
+          values: customEntityMapping[type].map(valuePair => {
+            return { name: valuePair };
+          }),
+        });
+      } else {
+        // Extend a Built-in Slot Type with Additional Values
+        slotTypes.push({
+          name: config.entities[type],
+          values: customEntityMapping[type].map(valuePair => {
+            return { name: { value: valuePair.value } };
+          }),
+        });
+      }
+    });
+    return slotTypes;
+  }
+
+  /**
+   * Returns Intent Schema for Amazon Alexa Config
    * @param preparedIntentConfiguration: Result of prepareConfiguration()
    */
-  buildIntentSchema(preparedIntentConfiguration: PreparedIntentConfiguration[], parameterMapping: PlatformGenerator.EntityMapping): IntentSchema[] {
+  private buildIntentSchema(
+    preparedIntentConfiguration: PreparedIntentConfiguration[],
+    parameterMapping: PlatformGenerator.EntityMapping,
+    customEntityMapping: PlatformGenerator.CustomEntityMapping
+  ): IntentSchema[] {
     return preparedIntentConfiguration.map(config => {
-      let slots = this.makeSlots(config.entities, parameterMapping);
+      const slots = this.makeSlots(config.entities, parameterMapping, customEntityMapping);
       return {
         name: config.intent,
         slots: slots.length === 0 ? [] : slots,
-        samples: config.utterances
+        samples: [
+          ...new Set(
+            config.utterances.map(utterance => {
+              return utterance.replace(/\{\{(.*?)\}\}/g, (match, value) => {
+                return `{${value.split("|").pop()}}`;
+              });
+            })
+          ),
+        ],
       };
-    })
+    });
   }
 
   /** Builds full schema out of given intent schemas */
-  buildFullSchema(intentSchemas: IntentSchema[]): FullAlexaSchema {
+  private buildFullSchema(intentSchema: IntentSchema[], typeSchema: TypeSchema[]): FullAlexaSchema {
     let invocationName: string = this.component.configuration.invocationName;
     /** Validate invocationName characters */
     if (!invocationName.match(/^[a-z][a-z\s\.']*$/)) {
@@ -58,53 +111,69 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
     return {
       interactionModel: {
         languageModel: {
-          invocationName: invocationName,
-          intents: intentSchemas,
-          types: [],
-        }
-      }
-    }
+          invocationName,
+          intents: intentSchema,
+          types: typeSchema,
+        },
+      },
+    };
   }
 
   /** Returns BuildIntentConfiguration[] but with all unspeakable intents filtered out, and all other GenericIntents converted to amazon specific strings */
-  prepareConfiguration(intentConfigurations: PlatformGenerator.IntentConfiguration[]): PreparedIntentConfiguration[] {
+  private prepareConfiguration(intentConfigurations: PlatformGenerator.IntentConfiguration[]): PreparedIntentConfiguration[] {
     // Leave out unspeakable intents
-    let withoutUnspeakable = intentConfigurations.filter(config => typeof (config.intent) === "string" || GenericIntent.isSpeakable(config.intent));
-
+    const withoutUnspeakable = intentConfigurations.filter(config => typeof config.intent === "string" || GenericIntent.isSpeakable(config.intent));
     // Leave out all non-platform intents without utterances, but tell user about this
-    let withoutUndefinedUtterances: PlatformGenerator.IntentConfiguration[] = [];
+    const withoutUndefinedUtterances: PlatformGenerator.IntentConfiguration[] = [];
     withoutUnspeakable.forEach(config => {
-      if (typeof (config.intent) === "string" && (typeof (config.utterances) === "undefined" || config.utterances.length === 0)) {
+      if (typeof config.intent === "string" && (typeof config.utterances === "undefined" || config.utterances.length === 0)) {
         console.warn("You did not specify any utterances for intent: '" + config.intent + "'. Omitting..");
       } else {
         // Clear utterances of platform intents
-        if (typeof (config.intent) !== "string") config.utterances = [];
+        if (typeof config.intent !== "string") config.utterances = [];
 
         withoutUndefinedUtterances.push(config);
       }
     });
 
     // Create prepared set, without platform intents anymore
-    let preparedSet = withoutUndefinedUtterances
-      .map(config => { return Object.assign(config, { intent: typeof (config.intent) === "string" ? config.intent : genericIntentToAmazon[config.intent] }); })
-      .filter(config => typeof (config.intent) === "string");
+    const preparedSet = withoutUndefinedUtterances
+      .map(config => {
+        return { ...config, intent: typeof config.intent === "string" ? config.intent : genericIntentToAmazon[config.intent] };
+      })
+      .filter(config => typeof config.intent === "string");
 
     // Check if all intents are still present, even after filtering
-    if (preparedSet.length !== withoutUndefinedUtterances.length)
-      console.warn("Could not convert all intents, missing " + (withoutUndefinedUtterances.length - preparedSet.length) + " intents. " +
-        "Possibly some platform intents are not implemented into the alexa platform yet. Omitting them.");
+    if (preparedSet.length !== withoutUndefinedUtterances.length) {
+      console.warn(
+        "Could not convert all intents, missing " +
+          (withoutUndefinedUtterances.length - preparedSet.length) +
+          " intents. " +
+          "Possibly some platform intents are not implemented into the alexa platform yet. Omitting them."
+      );
+    }
 
     return preparedSet;
   }
 
-  private makeSlots(parameters: string[], parameterMapping: PlatformGenerator.EntityMapping): { name: string, type: string }[] {
+  private makeSlots(
+    parameters: string[],
+    parameterMapping: PlatformGenerator.EntityMapping,
+    customEntityMapping: PlatformGenerator.CustomEntityMapping
+  ): Array<{ name: string; type: string }> {
     return parameters.map(name => {
-      let config = this.component.configuration;
+      const config = this.component.configuration;
 
-      if (typeof (config.entities) === "undefined" || typeof (config.entities[parameterMapping[name]]) === "undefined")
+      // Return custom data type
+      if (typeof customEntityMapping[parameterMapping[name]] !== "undefined" && typeof config.entities[parameterMapping[name]] === "undefined") {
+        return { name, type: parameterMapping[name] };
+      }
+
+      if (typeof config.entities === "undefined" || typeof config.entities[parameterMapping[name]] === "undefined") {
         throw Error("Missing amazon configured type for parameter '" + name + "'");
+      }
 
-      return { name: name, type: config.entities[parameterMapping[name]] };
+      return { name, type: config.entities[parameterMapping[name]] };
     });
   }
 }
@@ -115,7 +184,7 @@ export interface PreparedIntentConfiguration extends PlatformGenerator.IntentCon
 
 export interface IntentSchema {
   name: string;
-  slots: { name: string; type: string }[];
+  slots: Array<{ name: string; type: string }>;
   samples: string[];
 }
 
@@ -123,8 +192,21 @@ export interface FullAlexaSchema {
   interactionModel: {
     languageModel: {
       invocationName: string;
-      intents: IntentSchema[],
-      types: any[];
-    }
-  }
+      intents: IntentSchema[];
+      types: TypeSchema[];
+    };
+  };
+}
+
+export interface TypeSchema {
+  name: string;
+  values: TypeValueSchema[];
+}
+
+export interface TypeValueSchema {
+  id?: string;
+  name: {
+    value: string;
+    synonyms?: string[];
+  };
 }

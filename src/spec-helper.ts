@@ -1,46 +1,60 @@
-import { Component } from "inversify-components";
-import { SpecSetup, PlatformSpecHelper, RequestContext, intent, } from "assistant-source";
+import {
+  HandlerProxyFactory,
+  injectionNames,
+  intent as Intent,
+  PlatformSpecHelper,
+  RequestContext,
+  SpecHelper,
+  UnsupportedFeatureSupportForHandables,
+} from "assistant-source";
+import { AlexaHandler } from "./components/alexa/handler";
+import { alexaInjectionNames } from "./components/alexa/injection-names";
+import { AlexaSpecificHandable, AlexaSpecificTypes, ExtractionInterface } from "./components/alexa/public-interfaces";
 
-import { ExtractionInterface, HandlerInterface } from "./components/alexa/public-interfaces";
-import { AlexaHandle } from "./components/alexa/handle";
+export class AlexaSpecHelper implements PlatformSpecHelper<AlexaSpecificTypes, AlexaSpecificHandable<AlexaSpecificTypes>> {
+  constructor(public specHelper: SpecHelper) {}
 
-export class SpecHelper implements PlatformSpecHelper {
-  specSetup: SpecSetup
-
-  constructor(assistantSpecSetup: SpecSetup) {
-    this.specSetup = assistantSpecSetup;
-  }
-
-  async pretendIntentCalled(intent: intent, autoStart = true, additionalExtractions = {}, additionalContext = {}): Promise<HandlerInterface> {
-    let extraction: ExtractionInterface = Object.assign({
+  public async pretendIntentCalled(intent: Intent, additionalExtractions = {}, additionalContext = {}): Promise<AlexaSpecificHandable<AlexaSpecificTypes>> {
+    const extraction: ExtractionInterface = {
+      intent,
       platform: "alexa",
-      intent: intent,
       sessionID: "alexa-mock-session-id",
       language: "en",
       oAuthToken: "alexa-mock-oauth-token",
-      temporalAuthToken: "alexa-mock-temp-auth-token"
-    }, additionalExtractions);
+      temporalAuthToken: "alexa-mock-temp-auth-token",
+      requestTimestamp: "2017-06-24T16:00:18Z",
+      sessionData: '{"alexa-mock-first-session-attribute": "first-session-attribute","alexa-mock-second-session-attribute": "second-session-attribute"}',
+      ...additionalExtractions,
+    };
 
-    let context: RequestContext = Object.assign({
+    const context: RequestContext = {
       id: "mocked-alexa-request-id",
-      method: 'POST',
-      path: '/alexa',
+      method: "POST",
+      path: "/alexa",
       body: {},
       headers: {},
-      responseCallback: () => {}
-    }, additionalContext);
+      // tslint:disable-next-line:no-empty
+      responseCallback: () => {},
+      ...additionalContext,
+    };
 
-    this.specSetup.createRequestScope(extraction, context);
+    this.specHelper.createRequestScope(extraction, context);
 
     // Bind handler as singleton
-    this.specSetup.setup.container.inversifyInstance.unbind("alexa:current-response-handler");
-    this.specSetup.setup.container.inversifyInstance.bind("alexa:current-response-handler").to(AlexaHandle).inSingletonScope();
-    
-    // auto run machine if wanted
-    if (autoStart) {
-      await this.specSetup.runMachine();
-    }
-    
-    return this.specSetup.setup.container.inversifyInstance.get<AlexaHandle>("alexa:current-response-handler");  
+    this.specHelper.assistantJs.container.inversifyInstance.unbind(alexaInjectionNames.current.responseHandler);
+    this.specHelper.assistantJs.container.inversifyInstance
+      .bind(alexaInjectionNames.current.responseHandler)
+      .to(AlexaHandler)
+      .inSingletonScope();
+
+    const proxyFactory = this.specHelper.assistantJs.container.inversifyInstance.get<HandlerProxyFactory>(injectionNames.handlerProxyFactory);
+
+    const currentHandler = this.specHelper.assistantJs.container.inversifyInstance.get<
+      AlexaSpecificHandable<AlexaSpecificTypes> & UnsupportedFeatureSupportForHandables
+    >(alexaInjectionNames.current.responseHandler);
+
+    const proxiedHandler = proxyFactory.createHandlerProxy(currentHandler);
+
+    return proxiedHandler;
   }
 }

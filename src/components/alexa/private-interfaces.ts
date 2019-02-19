@@ -1,17 +1,14 @@
-import { MinimalRequestExtraction, OptionalExtractions, OptionalHandlerFeatures, MinimalResponseHandler, RequestContext } from "assistant-source";
-import * as askInterfaces from "./skill-kit-interfaces";
-
 export namespace Configuration {
   /** Configuration defaults -> all of these keys are optional for user */
   export interface Defaults {
     /** Route of alexa requests. Defaults to "/alexa". */
-    route?: string;
+    route: string;
 
     /** Mapping of slot values. Use your AssistantJS slot type as key and your alexa slot type as value. */
-    entities?: { [name: string]: string };
+    entities: { [name: string]: string };
 
     /** If set to false, we will not use alexa-verifier to test valid requests. Using false might be useful for alexa simulator. Defaults to true. */
-    useVerifier?: boolean;
+    useVerifier: boolean;
   }
 
   /** Required configuration options, no defaults are used here */
@@ -24,7 +21,7 @@ export namespace Configuration {
   }
 
   /** Available configuration settings in a runtime application */
-  export interface Runtime extends Defaults, Required {};
+  export interface Runtime extends Defaults, Required {}
 }
 
 /** Name of current component */
