@@ -1,5 +1,13 @@
 import * as askInterfaces from "ask-sdk-model";
-import { BasicAnswerTypes, BasicHandable, MinimalRequestExtraction, OptionalExtractions, OptionallyPromise, RequestContext } from "assistant-source";
+import {
+  BasicAnswerTypes,
+  BasicHandable,
+  MinimalRequestExtraction,
+  OptionalExtractions,
+  OptionallyPromise,
+  RequestContext,
+  OptionalHandlerFeatures,
+} from "assistant-source";
 import { Configuration } from "./private-interfaces";
 
 /** Configuration of alexa component */
@@ -115,12 +123,23 @@ export interface AlexaSpecificTypes extends BasicAnswerTypes {
   alexaTemplate: askInterfaces.interfaces.display.Template;
 }
 
+/*
+ * Typescript does not allow to extend two interfaces defining the same property in different ways (as
+ * `ApiAiSpecificHandable` and `Reprompts` do in this instance). On the other hand, intersection types
+ * are inherently suitable for mixin types (cmp. https://web.archive.org/web/20180712110334/https://www.typescriptlang.org/docs/handbook/advanced-types.html).
+ */
+type MixinTypes<CustomTypes extends AlexaSpecificTypes> = BasicHandable<CustomTypes> &
+  OptionalHandlerFeatures.Authentication &
+  OptionalHandlerFeatures.Card<CustomTypes> &
+  OptionalHandlerFeatures.Reprompts<CustomTypes> &
+  OptionalHandlerFeatures.SessionData<CustomTypes>;
+
 /**
  * Add custom methods for Alexa
  *
  * some of the descriptions for the Methods are from https://developer.amazon.com/blogs/alexa/post/05a2ea89-2118-4dcb-a8df-af3d8ac623a8/building-for-echo-show-and-echo-spot-vui-gui-best-practices
  */
-export interface AlexaSpecificHandable<MergedAnswerTypes extends AlexaSpecificTypes> extends BasicHandable<MergedAnswerTypes> {
+export interface AlexaSpecificHandable<MergedAnswerTypes extends AlexaSpecificTypes> extends MixinTypes<MergedAnswerTypes> {
   /**
    * sets any Directive Alexa supports, overwrites any other directives, wich are set via the other methods, like ListTemplate1
    * @param customDirectives
