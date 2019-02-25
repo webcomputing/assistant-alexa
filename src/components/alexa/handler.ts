@@ -6,7 +6,6 @@ import {
   CardMixin,
   injectionNames,
   MinimalRequestExtraction,
-  OptionalHandlerFeatures,
   OptionallyPromise,
   RepromptsMixin,
   RequestContext,
@@ -18,12 +17,7 @@ import { AlexaSpecificHandable, AlexaSpecificTypes, AlexaSubtypes } from "./publ
 
 @injectable()
 export class AlexaHandler<MergedAnswerTypes extends AlexaSpecificTypes> extends BasicHandler<MergedAnswerTypes>
-  implements
-    AlexaSpecificHandable<MergedAnswerTypes>,
-    OptionalHandlerFeatures.Authentication,
-    OptionalHandlerFeatures.Card<MergedAnswerTypes>,
-    OptionalHandlerFeatures.Reprompts<MergedAnswerTypes>,
-    OptionalHandlerFeatures.SessionData<MergedAnswerTypes> {
+  implements AlexaSpecificHandable<MergedAnswerTypes> {
   /**
    * define missing methods from Mixins here
    */
@@ -269,7 +263,7 @@ export class AlexaHandler<MergedAnswerTypes extends AlexaSpecificTypes> extends 
    * Maps TemplateSubType to full Template Directive
    * @param type
    */
-  private mapTemplate<K, T extends { type: K }>(type: K): ((value: any) => T) {
+  private mapTemplate<K, T extends { type: K }>(type: K): (value: any) => T {
     return (value: T) => {
       return { ...(value as any), type };
     };
