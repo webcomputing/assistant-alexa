@@ -12,34 +12,36 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
   constructor(@inject(getMetaInjectionName(COMPONENT_NAME)) private component: Component<Configuration.Runtime>) {}
 
   public execute(
-    language: string,
+    languages: string[],
     buildDir: string,
-    intentConfigurations: PlatformGenerator.IntentConfiguration[],
-    entityMapping: PlatformGenerator.EntityMapping,
-    customEntityMapping: PlatformGenerator.CustomEntityMapping
+    intentConfigurations: PlatformGenerator.Multilingual<PlatformGenerator.IntentConfiguration[]>,
+    entityMapping: PlatformGenerator.Multilingual<PlatformGenerator.EntityMapping>,
+    customEntityMapping: PlatformGenerator.Multilingual<PlatformGenerator.CustomEntityMapping>
   ) {
-    const currentBuildDir = buildDir + "/alexa";
-
     console.log("================= PROCESSING ON ALEXA =================");
-    console.log("Intents: #" + intentConfigurations.length + ", language: " + language);
-
-    console.log("validating...");
-    const convertedIntents = this.prepareConfiguration(intentConfigurations);
-
-    console.log("building entities (" + Object.keys(customEntityMapping).length + ")...");
-    const customEntities = this.buildCustomEntities(customEntityMapping);
-
-    console.log("building intent schema...");
-    const intentSchema = this.buildIntentSchema(convertedIntents, entityMapping, customEntityMapping);
-    const fullSchema = this.buildFullSchema(intentSchema, customEntities);
+    const currentBuildDir = buildDir + "/alexa";
 
     console.log("creating build directory: " + currentBuildDir);
     fs.mkdirSync(currentBuildDir);
 
-    console.log("writing to files...");
-    fs.writeFileSync(currentBuildDir + "/schema.json", JSON.stringify(fullSchema, null, 2));
+    languages.forEach(language => {
+      console.log("Intents: #" + intentConfigurations.length + ", language: " + language);
 
-    console.log("=================      FINISHED.      =================");
+      console.log("validating...");
+      const convertedIntents = this.prepareConfiguration(intentConfigurations[language]);
+
+      console.log("building entities (" + Object.keys(customEntityMapping[language]).length + ")...");
+      const customEntities = this.buildCustomEntities(customEntityMapping[language]);
+
+      console.log("building intent schema...");
+      const intentSchema = this.buildIntentSchema(convertedIntents, entityMapping[language], customEntityMapping[language]);
+      const fullSchema = this.buildFullSchema(intentSchema, customEntities);
+
+      console.log("writing to files...");
+      fs.writeFileSync(`${currentBuildDir}/schema_${language}.json`, JSON.stringify(fullSchema, null, 2));
+
+      console.log("=================      FINISHED.      =================");
+    });
   }
 
   /**

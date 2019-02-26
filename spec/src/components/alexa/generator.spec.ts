@@ -10,8 +10,8 @@ interface CurrentThisContext extends ThisContext {
   componentMetaData: Component<Configuration.Runtime>;
 
   params: {
-    /** Language transmitted to the AlexaGenerator execute method */
-    language: string;
+    /** Languages transmitted to the AlexaGenerator execute method */
+    languages: string[];
 
     /** Build directory transmitted to the AlexaGenerator execute method */
     buildDir: string;
@@ -57,7 +57,7 @@ describe("AlexaGenerator", function() {
     /** Set default parameter */
     this.params = {} as any;
     this.params.buildDir = "tmp";
-    this.params.language = "en";
+    this.params.languages = ["en"];
     this.params.intentConfigurations = [];
     this.params.entityMapping = {};
     this.params.customEntityMapping = {};
@@ -72,11 +72,11 @@ describe("AlexaGenerator", function() {
 
     this.execAlexaGenerator = async function(this: CurrentThisContext) {
       return this.getAlexaGenerator().execute(
-        this.params.language,
+        this.params.languages,
         this.params.buildDir,
-        this.params.intentConfigurations,
-        this.params.entityMapping,
-        this.params.customEntityMapping
+        { [this.params.languages[0]]: this.params.intentConfigurations },
+        { [this.params.languages[0]]: this.params.entityMapping },
+        { [this.params.languages[0]]: this.params.customEntityMapping }
       );
     };
 
@@ -90,7 +90,7 @@ describe("AlexaGenerator", function() {
           },
         },
       };
-      expect(fs.writeFileSync).toHaveBeenCalledWith(`${this.params.buildDir}/alexa/schema.json`, expectedReturnValue);
+      expect(fs.writeFileSync).toHaveBeenCalledWith(`${this.params.buildDir}/alexa/schema_${this.params.languages[0]}.json`, expectedReturnValue);
     };
   });
 
@@ -113,9 +113,24 @@ describe("AlexaGenerator", function() {
       expect(fs.mkdirSync).toHaveBeenCalledWith(`${this.params.buildDir}/alexa`);
     });
 
-    it("creates a schema.json file in the alexa build directory", async function(this: CurrentThisContext) {
+    it("creates a schema file in the alexa build directory for the given language", async function(this: CurrentThisContext) {
       this.execAlexaGenerator();
-      expect(fs.writeFileSync).toHaveBeenCalledWith(`${this.params.buildDir}/alexa/schema.json`, jasmine.anything());
+      expect(fs.writeFileSync).toHaveBeenCalledWith(`${this.params.buildDir}/alexa/schema_${this.params.languages[0]}.json`, jasmine.anything());
+    });
+
+    describe("without languages", function() {
+      beforeEach(async function(this: CurrentThisContext) {
+        this.params.languages = [];
+        this.execAlexaGenerator();
+      });
+
+      it("creates a build directory", async function(this: CurrentThisContext) {
+        expect(fs.mkdirSync).toHaveBeenCalledWith(`${this.params.buildDir}/alexa`);
+      });
+
+      it("will not writes any files to disk", async function(this: CurrentThisContext) {
+        expect(fs.writeFileSync).not.toHaveBeenCalled();
+      });
     });
 
     describe("without entities", function() {
