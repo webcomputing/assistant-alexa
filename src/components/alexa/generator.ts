@@ -3,6 +3,7 @@ import { GenericIntent, PlatformGenerator } from "assistant-source";
 import * as fs from "fs";
 import { inject, injectable } from "inversify";
 import { Component, getMetaInjectionName } from "inversify-components";
+import * as path from "path";
 import { alexaInjectionNames } from "./injection-names";
 import { genericIntentToAmazon } from "./intent-dict";
 import { COMPONENT_NAME, Configuration } from "./private-interfaces";
@@ -15,26 +16,26 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
     languages: string[],
     buildDir: string,
     intentConfigurations: PlatformGenerator.Multilingual<PlatformGenerator.IntentConfiguration[]>,
-    entityMapping: PlatformGenerator.Multilingual<PlatformGenerator.EntityMapping>,
+    entityMapping: PlatformGenerator.EntityMapping,
     customEntityMapping: PlatformGenerator.Multilingual<PlatformGenerator.CustomEntityMapping>
   ) {
     console.log("================= PROCESSING ON ALEXA =================");
-    const currentBuildDir = buildDir + "/alexa";
+    const currentBuildDir = path.join(buildDir, "alexa");
 
-    console.log("creating build directory: " + currentBuildDir);
+    console.log(`creating build directory: ${currentBuildDir}`);
     fs.mkdirSync(currentBuildDir);
 
     languages.forEach(language => {
-      console.log("Intents: #" + intentConfigurations.length + ", language: " + language);
+      console.log(`Intents: #${intentConfigurations[language].length}, language: ${language}`);
 
       console.log("validating...");
       const convertedIntents = this.prepareConfiguration(intentConfigurations[language]);
 
-      console.log("building entities (" + Object.keys(customEntityMapping[language]).length + ")...");
+      console.log(`building entities (${Object.keys(customEntityMapping[language]).length})...`);
       const customEntities = this.buildCustomEntities(customEntityMapping[language]);
 
       console.log("building intent schema...");
-      const intentSchema = this.buildIntentSchema(convertedIntents, entityMapping[language], customEntityMapping[language]);
+      const intentSchema = this.buildIntentSchema(convertedIntents, entityMapping, customEntityMapping[language]);
       const fullSchema = this.buildFullSchema(intentSchema, customEntities);
 
       console.log("writing to files...");
