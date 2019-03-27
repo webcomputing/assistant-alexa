@@ -3,8 +3,12 @@ import { execSync } from "child_process";
 import * as fs from "fs";
 import { inject, injectable } from "inversify";
 import { Component, getMetaInjectionName } from "inversify-components";
+import * as path from "path";
 import { AlexaSkillSchema, COMPONENT_NAME, Configuration } from "./private-interfaces";
 
+/**
+ * Manage the Alexa skill deployment
+ */
 @injectable()
 export class AlexaDeployment implements CLIDeploymentExtension {
   constructor(
@@ -12,6 +16,10 @@ export class AlexaDeployment implements CLIDeploymentExtension {
     @inject(injectionNames.logger) private logger: Logger
   ) {}
 
+  /**
+   * Execute the Alexa agent deployment
+   * @param buildPath Path to the current build directory
+   */
   public async execute(buildPath: string) {
     // tslint:disable-next-line:no-console
     console.log("===============     APIAI DEPLOYMENT     ===============");
@@ -25,12 +33,12 @@ export class AlexaDeployment implements CLIDeploymentExtension {
 
       await Promise.all(
         countryCodes.map(async countryCode => {
-          const currentLocale = languageMapping(countryCode);
+          const currentLocale = this.languageMapping(countryCode);
           await this.exportModel(buildPath, currentLocale);
           await this.updateModel(buildPath, countryCode, currentLocale);
 
           // Wait until the model upload is out of state in progress.
-          await this.whileModelIsInProgress(countryCode);
+          await this.whileModelTrainingIsInProgress(countryCode);
         })
       );
       // tslint:disable-next-line:no-console
@@ -53,7 +61,7 @@ export class AlexaDeployment implements CLIDeploymentExtension {
     try {
       // Execute the ask update model command. e.g. 'ask api update-model -s schema.json -l de-DE'
       const updateModelExecution = execSync(
-        `ask api update-model -s ${this.componentMeta.configuration.applicationID} -f ${buildPath}/${countryCode}/alexa/schema.json -l ${locale}`
+        `ask api update-model -s ${this.componentMeta.configuration.applicationID} -f ${path.join(buildPath, countryCode, "alexa", "schema.json")} -l ${locale}`
       );
 
       /**
@@ -84,7 +92,7 @@ export class AlexaDeployment implements CLIDeploymentExtension {
   private async exportModel(buildPath: string, locale: string) {
     const model = await this.getModel(locale);
     try {
-      fs.writeFileSync(`${buildPath}/deployments/alexa/schema_${locale}.json`, JSON.stringify(model, null, 2));
+      fs.writeFileSync(path.join(buildPath, "deployments", "alexa", `schema_${locale}.json`), JSON.stringify(model, null, 2));
     } catch (error) {
       this.logger.error(error);
     }
@@ -102,11 +110,11 @@ export class AlexaDeployment implements CLIDeploymentExtension {
     if (
       parsedSkillStatus &&
       parsedSkillStatus.interactionModel &&
-      parsedSkillStatus.interactionModel[languageMapping(countryCode)] &&
-      parsedSkillStatus.interactionModel[languageMapping(countryCode)].lastUpdateRequest &&
-      parsedSkillStatus.interactionModel[languageMapping(countryCode)].lastUpdateRequest.status
+      parsedSkillStatus.interactionModel[this.languageMapping(countryCode)] &&
+      parsedSkillStatus.interactionModel[this.languageMapping(countryCode)].lastUpdateRequest &&
+      parsedSkillStatus.interactionModel[this.languageMapping(countryCode)].lastUpdateRequest.status
     ) {
-      return parsedSkillStatus.interactionModel[languageMapping(countryCode)].lastUpdateRequest.status;
+      return parsedSkillStatus.interactionModel[this.languageMapping(countryCode)].lastUpdateRequest.status;
     }
     return "ERROR";
   }
@@ -117,14 +125,14 @@ export class AlexaDeployment implements CLIDeploymentExtension {
    */
   private logModelBuildStatus(countryCode: string) {
     // tslint:disable-next-line:no-console
-    console.log(`Amazon model building for ${languageMapping(countryCode)}: ${this.status(countryCode)}`);
+    console.log(`Amazon model building for ${this.languageMapping(countryCode)}: ${this.status(countryCode)}`);
   }
 
   /**
    *  Wait until the status of the model upload is in state IN_PROGRESS
    * @param countryCode Country code like de or en
    */
-  private async whileModelIsInProgress(countryCode: string) {
+  private async whileModelTrainingIsInProgress(countryCode: string) {
     const startTime: number = Date.now();
     const untilStateInProgress = new Promise((resolve, reject) => {
       const interval = setInterval(() => {
@@ -203,15 +211,15 @@ export class AlexaDeployment implements CLIDeploymentExtension {
    * @returns skill schema as @type {AlexaSkillSchema}
    */
   private getCurrentSkillSchema(buildPath: string) {
-    if (!fs.existsSync(`${buildPath}/deployments/alexa/skill-backup.json`)) {
+    if (!fs.existsSync(path.join(buildPath, "deployments", "alexa", "skill-backup.json"))) {
       this.exportCurrentSkillSchema(buildPath);
     }
-    const alexaSkillSchema: AlexaSkillSchema = JSON.parse(fs.readFileSync(`${buildPath}/deployments/alexa/skill-backup.json`).toString());
+    const alexaSkillSchema: AlexaSkillSchema = JSON.parse(fs.readFileSync(path.join(buildPath, "deployments", "alexa", "skill-backup.json")).toString());
     return alexaSkillSchema;
   }
 
   /**
-   * Generates the locales schema form the given country codes
+   * Generates the locales schema for the given country codes
    * @param skillSchema @type {AlexaSkillSchema} witch should be updated
    * @param countryCodes Array of country codes like ["de", "en"]
    * @returns locales schema @type {AlexaSkillSchema["manifest"]["publishingInformation"]["locales"]}
@@ -220,7 +228,7 @@ export class AlexaDeployment implements CLIDeploymentExtension {
     const configuredLocales = Object.keys(skillSchema.manifest.publishingInformation.locales);
     let localesDefinitions;
 
-    if (JSON.stringify(configuredLocales.sort()) !== JSON.stringify(countryCodes.map(countryCode => languageMapping(countryCode)).sort())) {
+    if (JSON.stringify(configuredLocales.sort()) !== JSON.stringify(countryCodes.map(countryCode => this.languageMapping(countryCode)).sort())) {
       // tslint:disable-next-line:no-console
       console.log("Skill schema will be updated because the language definitions are incorrect. Missing languages.");
 
@@ -231,7 +239,7 @@ export class AlexaDeployment implements CLIDeploymentExtension {
       localesDefinitions = countryCodes
         .map(countryCode => {
           return {
-            [languageMapping(countryCode)]: {
+            [this.languageMapping(countryCode)]: {
               name: this.componentMeta.configuration.invocationName,
             },
           };
@@ -250,7 +258,7 @@ export class AlexaDeployment implements CLIDeploymentExtension {
    * @param skillSchema @type {AlexaSkillSchema} witch should be updated
    */
   private async updateSkillSchema(buildPath: string, countryCodes: string[], skillSchema: AlexaSkillSchema) {
-    fs.writeFileSync(`${buildPath}/deployments/alexa/skill.json`, JSON.stringify(skillSchema, null, 2));
+    fs.writeFileSync(path.join(buildPath, "deployments", "alexa", "skill.json"), JSON.stringify(skillSchema, null, 2));
 
     const updateSkillResult = execSync(
       `ask api update-skill -s ${this.componentMeta.configuration.applicationID} -f ${buildPath}/deployments/alexa/skill.json`
@@ -258,11 +266,15 @@ export class AlexaDeployment implements CLIDeploymentExtension {
     // tslint:disable-next-line:no-console
     console.log("##############################################################################################");
     // tslint:disable-next-line:no-console
+    console.log(execSync);
+
+    console.log("updateSkillResult");
+
     console.log(updateSkillResult.toString());
     // tslint:disable-next-line:no-console
     console.log("##############################################################################################");
 
-    await Promise.all(countryCodes.map(countryCode => this.whileModelIsInProgress(countryCode)));
+    await Promise.all(countryCodes.map(countryCode => this.whileModelTrainingIsInProgress(countryCode)));
   }
 
   /**
@@ -295,16 +307,15 @@ export class AlexaDeployment implements CLIDeploymentExtension {
       await this.updateSkillSchema(buildPath, countryCodes, currentSkillSchema);
     }
   }
+  /**
+   * Alexa needs the locales in a LCID Format. Currently we use the country code for indicating the language.
+   * This mapping function allows you to get the LCID Code for the country codes: de or en.
+   * If an unknown country code will be given, these will not be mapped and the given country code will be returned.
+   * @param countryCode country code as a string like de or en
+   * @returns LCID Code or country code as a string
+   */
+  private languageMapping(countryCode) {
+    const countryCodeLanguageMapping = { de: "de-DE", en: "en-GB" };
+    return countryCodeLanguageMapping[countryCode] || countryCode;
+  }
 }
-
-/**
- * Alexa needs the locales in a LCID Format. Currently we use the country code for indicating the language.
- * This mapping function allows you to get the LCID Code for the country codes: de or en.
- * If an unknown country code will be given, these will not be mapped and the given country code will be returned.
- * @param countryCode country code as a string like de or en
- * @returns LCID Code or country code as a string
- */
-const languageMapping = countryCode => {
-  const countryCodeLanguageMapping = { de: "de-DE", en: "en-GB" };
-  return countryCodeLanguageMapping[countryCode] || countryCode;
-};

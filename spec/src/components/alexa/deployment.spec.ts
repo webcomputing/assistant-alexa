@@ -27,6 +27,18 @@ const { readdirSync, mkdirSync, writeFileSync, existsSync, readFileSync } = fs;
 const { error, log } = console;
 
 describe("AlexaDeployment", function() {
+  afterEach(async function(this: CurrentThisContext) {
+    /** Cleanup the overridden functions */
+    (fs as any).readdirSync = readdirSync;
+    (fs as any).readFileSync = readFileSync;
+    (fs as any).mkdirSync = mkdirSync;
+    (fs as any).writeFileSync = writeFileSync;
+    (fs as any).existsSync = existsSync;
+
+    (console as any).error = error;
+    (console as any).log = log;
+  });
+
   beforeEach(async function(this: CurrentThisContext) {
     /** Inject an instance of the current component metadata. */
     this.componentMeta = this.container.inversifyInstance.get(getMetaInjectionName(COMPONENT_NAME));
@@ -80,9 +92,6 @@ describe("AlexaDeployment", function() {
       }
     });
 
-    /** Replace execSync function, used by the AlexaDeployment, with a spy object */
-    (execSync as any) = this.execSyncSpy;
-
     /** Replace console log and error with an spy instance */
     (console as any).error = jasmine.createSpy("console.error");
     (console as any).log = jasmine.createSpy("console.log");
@@ -105,18 +114,6 @@ describe("AlexaDeployment", function() {
      * Instance of the AlexaDeployment
      */
     this.alexaDeployment = new AlexaDeployment(this.componentMeta, this.logger);
-  });
-
-  afterEach(async function(this: CurrentThisContext) {
-    /** Cleanup the overridden functions */
-    (fs as any).readdirSync = readdirSync;
-    (fs as any).readFileSync = readFileSync;
-    (fs as any).mkdirSync = mkdirSync;
-    (fs as any).writeFileSync = writeFileSync;
-    (fs as any).existsSync = existsSync;
-
-    (console as any).error = error;
-    (console as any).log = log;
   });
 
   describe("#execute", function() {
