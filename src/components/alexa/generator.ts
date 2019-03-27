@@ -46,7 +46,7 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
    * Returns an entity schema for Alexa Config
    * @param customEntityMapping
    */
-  public buildCustomEntities(customEntityMapping: PlatformGenerator.CustomEntityMapping): TypeSchema[] {
+  private buildCustomEntities(customEntityMapping: PlatformGenerator.CustomEntityMapping): TypeSchema[] {
     const config = this.component.configuration;
     const slotTypes: TypeSchema[] = [];
 
@@ -76,7 +76,7 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
    * Returns Intent Schema for Amazon Alexa Config
    * @param preparedIntentConfiguration: Result of prepareConfiguration()
    */
-  public buildIntentSchema(
+  private buildIntentSchema(
     preparedIntentConfiguration: PreparedIntentConfiguration[],
     parameterMapping: PlatformGenerator.EntityMapping,
     customEntityMapping: PlatformGenerator.CustomEntityMapping
@@ -100,7 +100,7 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
   }
 
   /** Builds full schema out of given intent schemas */
-  public buildFullSchema(intentSchema: IntentSchema[], typeSchema: TypeSchema[]): FullAlexaSchema {
+  private buildFullSchema(intentSchema: IntentSchema[], typeSchema: TypeSchema[]): FullAlexaSchema {
     let invocationName: string = this.component.configuration.invocationName;
     /** Validate invocationName characters */
     if (!invocationName.match(/^[a-z][a-z\s\.']*$/)) {
@@ -120,10 +120,9 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
   }
 
   /** Returns BuildIntentConfiguration[] but with all unspeakable intents filtered out, and all other GenericIntents converted to amazon specific strings */
-  public prepareConfiguration(intentConfigurations: PlatformGenerator.IntentConfiguration[]): PreparedIntentConfiguration[] {
+  private prepareConfiguration(intentConfigurations: PlatformGenerator.IntentConfiguration[]): PreparedIntentConfiguration[] {
     // Leave out unspeakable intents
     const withoutUnspeakable = intentConfigurations.filter(config => typeof config.intent === "string" || GenericIntent.isSpeakable(config.intent));
-
     // Leave out all non-platform intents without utterances, but tell user about this
     const withoutUndefinedUtterances: PlatformGenerator.IntentConfiguration[] = [];
     withoutUnspeakable.forEach(config => {
