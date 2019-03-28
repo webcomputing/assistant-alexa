@@ -10,20 +10,20 @@ interface CurrentThisContext extends ThisContext {
   componentMetaData: Component<Configuration.Runtime>;
 
   params: {
-    /** Language transmitted to the AlexaGenerator execute method */
-    language: string;
+    /** Languages transmitted to the AlexaGenerator execute method */
+    languages: string[];
 
     /** Build directory transmitted to the AlexaGenerator execute method */
     buildDir: string;
 
     /** Intent configurations transmitted to the AlexaGenerator execute method */
-    intentConfigurations: PlatformGenerator.IntentConfiguration[];
+    intentConfigurations: PlatformGenerator.Multilingual<PlatformGenerator.IntentConfiguration[]>;
 
     /** Entity mapping transmitted to the AlexaGenerator execute method */
     entityMapping: PlatformGenerator.EntityMapping;
 
     /** Custom entity mapping transmitted to the AlexaGenerator execute method */
-    customEntityMapping: PlatformGenerator.CustomEntityMapping;
+    customEntityMapping: PlatformGenerator.Multilingual<PlatformGenerator.CustomEntityMapping>;
   };
 
   /** Returns an new instance of the AlexaGenerator */
@@ -57,10 +57,10 @@ describe("AlexaGenerator", function() {
     /** Set default parameter */
     this.params = {} as any;
     this.params.buildDir = "tmp";
-    this.params.language = "en";
-    this.params.intentConfigurations = [];
+    this.params.languages = ["en"];
+    this.params.intentConfigurations = { en: [] };
     this.params.entityMapping = {};
-    this.params.customEntityMapping = {};
+    this.params.customEntityMapping = { en: {} };
 
     this.componentMetaData = this.container.inversifyInstance.get(getMetaInjectionName(COMPONENT_NAME));
     this.componentMetaData.configuration.entities = {};
@@ -72,7 +72,7 @@ describe("AlexaGenerator", function() {
 
     this.execAlexaGenerator = async function(this: CurrentThisContext) {
       return this.getAlexaGenerator().execute(
-        this.params.language,
+        this.params.languages,
         this.params.buildDir,
         this.params.intentConfigurations,
         this.params.entityMapping,
@@ -90,7 +90,7 @@ describe("AlexaGenerator", function() {
           },
         },
       };
-      expect(fs.writeFileSync).toHaveBeenCalledWith(`${this.params.buildDir}/alexa/schema.json`, expectedReturnValue);
+      expect(fs.writeFileSync).toHaveBeenCalledWith(`${this.params.buildDir}/alexa/schema_${this.params.languages[0]}.json`, expectedReturnValue);
     };
   });
 
@@ -113,27 +113,62 @@ describe("AlexaGenerator", function() {
       expect(fs.mkdirSync).toHaveBeenCalledWith(`${this.params.buildDir}/alexa`);
     });
 
-    it("creates a schema.json file in the alexa build directory", async function(this: CurrentThisContext) {
+    it("creates a schema file in the alexa build directory for the given language", async function(this: CurrentThisContext) {
       this.execAlexaGenerator();
-      expect(fs.writeFileSync).toHaveBeenCalledWith(`${this.params.buildDir}/alexa/schema.json`, jasmine.anything());
+      expect(fs.writeFileSync).toHaveBeenCalledWith(`${this.params.buildDir}/alexa/schema_${this.params.languages[0]}.json`, jasmine.anything());
+    });
+
+    describe("with multiple languages", function() {
+      beforeEach(async function(this: CurrentThisContext) {
+        this.params.languages = ["de", "en"];
+        this.params.intentConfigurations = { en: [], de: [] };
+        this.params.customEntityMapping = { en: {}, de: {} };
+        this.execAlexaGenerator();
+      });
+
+      it("creates a schema file in the alexa build directory for each given language", async function(this: CurrentThisContext) {
+        expect(fs.writeFileSync).toHaveBeenCalledWith(`${this.params.buildDir}/alexa/schema_${this.params.languages[0]}.json`, jasmine.anything());
+        expect(fs.writeFileSync).toHaveBeenCalledWith(`${this.params.buildDir}/alexa/schema_${this.params.languages[1]}.json`, jasmine.anything());
+      });
+    });
+
+    describe("without languages", function() {
+      beforeEach(async function(this: CurrentThisContext) {
+        this.params.languages = [];
+        this.execAlexaGenerator();
+      });
+
+      it("creates a build directory", async function(this: CurrentThisContext) {
+        expect(fs.mkdirSync).toHaveBeenCalledWith(`${this.params.buildDir}/alexa`);
+      });
+
+      it("will not writes any files to disk", async function(this: CurrentThisContext) {
+        expect(fs.writeFileSync).not.toHaveBeenCalled();
+      });
     });
 
     describe("without entities", function() {
       beforeEach(async function(this: CurrentThisContext) {
-        this.params.intentConfigurations = [
-          {
-            intent: "helloWorld",
-            utterances: ["hello world"],
-            entities: [],
-          },
-        ];
+        this.params.intentConfigurations = {
+          en: [
+            {
+              intent: "helloWorld",
+              utterances: ["hello world"],
+              entities: [],
+            },
+          ],
+        };
         await this.execAlexaGenerator();
       });
 
       it("maps transmitted intent configuration to alexa specific ones", async function(this: CurrentThisContext) {
         this.expectSchemaWith({
           intents: [
-            { name: this.params.intentConfigurations[0].intent as string, slots: [], samples: this.params.intentConfigurations[0].utterances as string[] },
+            {
+              name: this.params.intentConfigurations[this.params.languages[0]][0].intent as string,
+              slots: [],
+              samples: this.params.intentConfigurations[this.params.languages[0]][0].utterances as string[],
+            },
           ],
         });
       });
@@ -141,13 +176,15 @@ describe("AlexaGenerator", function() {
 
     describe("with entities", function() {
       beforeEach(async function(this: CurrentThisContext) {
-        this.params.intentConfigurations = [
-          {
-            intent: "helloWorld",
-            utterances: ["hello {{entity1}}"],
-            entities: ["entity1"],
-          },
-        ];
+        this.params.intentConfigurations = {
+          en: [
+            {
+              intent: "helloWorld",
+              utterances: ["hello {{entity1}}"],
+              entities: ["entity1"],
+            },
+          ],
+        };
 
         this.params.entityMapping = { entity1: "ENTITIES_TYPE", ENTITIES_TYPE: "ENTITIES_TYPE" };
       });
@@ -155,7 +192,9 @@ describe("AlexaGenerator", function() {
       describe("with customEntityMapping", function() {
         beforeEach(async function(this: CurrentThisContext) {
           this.params.customEntityMapping = {
-            ENTITIES_TYPE: [{ value: "entity1" }],
+            en: {
+              ENTITIES_TYPE: [{ value: "entity1" }],
+            },
           };
         });
 
@@ -168,7 +207,7 @@ describe("AlexaGenerator", function() {
             this.expectSchemaWith({
               intents: [
                 {
-                  name: this.params.intentConfigurations[0].intent as string,
+                  name: this.params.intentConfigurations[this.params.languages[0]][0].intent as string,
                   slots: [{ name: "entity1", type: "ENTITIES_TYPE" }],
                   samples: ["hello {entity1}"],
                 },
@@ -204,7 +243,11 @@ describe("AlexaGenerator", function() {
           it("references custom slot type in the intent definition", async function(this: CurrentThisContext) {
             this.expectSchemaWith({
               intents: [
-                { name: this.params.intentConfigurations[0].intent as string, slots: [{ name: "entity1", type: "@TYPE" }], samples: ["hello {entity1}"] },
+                {
+                  name: this.params.intentConfigurations[this.params.languages[0]][0].intent as string,
+                  slots: [{ name: "entity1", type: "@TYPE" }],
+                  samples: ["hello {entity1}"],
+                },
               ],
             });
           });
@@ -213,7 +256,7 @@ describe("AlexaGenerator", function() {
 
       describe("without customEntityMapping", function() {
         beforeEach(async function(this: CurrentThisContext) {
-          this.params.customEntityMapping = {};
+          this.params.customEntityMapping = { en: {} };
         });
 
         it("throws an missing amazon configured type exception", async function(this: CurrentThisContext) {
@@ -230,13 +273,21 @@ describe("AlexaGenerator", function() {
     describe("with utterances", function() {
       describe("without entities", function() {
         beforeEach(async function(this: CurrentThisContext) {
-          this.params.intentConfigurations = [{ intent: "helloWorld", utterances: ["hello world", "hello earth", "Salon world", "Salon earth"], entities: [] }];
+          this.params.intentConfigurations[this.params.languages[0]] = [
+            { intent: "helloWorld", utterances: ["hello world", "hello earth", "Salon world", "Salon earth"], entities: [] },
+          ];
           await this.execAlexaGenerator();
         });
 
         it("returns all given samples (utterances)", async function(this: CurrentThisContext) {
           this.expectSchemaWith({
-            intents: [{ name: jasmine.anything() as any, slots: jasmine.any(Array) as any, samples: this.params.intentConfigurations[0].utterances }],
+            intents: [
+              {
+                name: jasmine.anything() as any,
+                slots: jasmine.any(Array) as any,
+                samples: this.params.intentConfigurations[this.params.languages[0]][0].utterances,
+              },
+            ],
           });
         });
 
@@ -249,7 +300,7 @@ describe("AlexaGenerator", function() {
 
       describe("with multiple entities with given examples", function() {
         beforeEach(async function(this: CurrentThisContext) {
-          this.params.intentConfigurations = [
+          this.params.intentConfigurations[this.params.languages[0]] = [
             { intent: "helloWorld", utterances: ["hello {{world|type}}, how are {{you|type2}}"], entities: ["type", "type2"] },
           ];
           this.params.entityMapping = { type: "ENTITIES_TYPE", type2: "ENTITIES_TYPE_2", ENTITIES_TYPE: "ENTITIES_TYPE", ENTITIES_TYPE_2: "ENTITIES_TYPE_2" };
@@ -304,7 +355,7 @@ describe("AlexaGenerator", function() {
     describe("with speakable intents", function() {
       describe("with utterances matching to the intent", function() {
         beforeEach(async function(this: CurrentThisContext) {
-          this.params.intentConfigurations = [{ intent: GenericIntent.Yes, entities: [], utterances: ["Yes thats right"] }];
+          this.params.intentConfigurations[this.params.languages[0]] = [{ intent: GenericIntent.Yes, entities: [], utterances: ["Yes thats right"] }];
           await this.execAlexaGenerator();
         });
 
@@ -315,7 +366,7 @@ describe("AlexaGenerator", function() {
 
       describe("without utterances matching to the intent", function() {
         beforeEach(async function(this: CurrentThisContext) {
-          this.params.intentConfigurations = [{ intent: "noUtterances", entities: [], utterances: [] }];
+          this.params.intentConfigurations[this.params.languages[0]] = [{ intent: "noUtterances", entities: [], utterances: [] }];
           await this.execAlexaGenerator();
         });
 
@@ -327,7 +378,7 @@ describe("AlexaGenerator", function() {
 
     describe("with unspeakable generic intents", function() {
       beforeEach(async function(this: CurrentThisContext) {
-        this.params.intentConfigurations = [{ intent: 11, entities: [], utterances: [] }];
+        this.params.intentConfigurations[this.params.languages[0]] = [{ intent: 11, entities: [], utterances: [] }];
         await this.execAlexaGenerator();
       });
 
