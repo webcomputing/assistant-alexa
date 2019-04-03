@@ -147,7 +147,7 @@ export class AlexaDeployment implements CLIDeploymentExtension {
    */
   private logModelBuildStatus(countryCode: string) {
     // tslint:disable-next-line:no-console
-    console.log(`Amazon model building for ${this.languageMapping(countryCode)}: ${this.status(countryCode)}`);
+    console.log(`Amazon model training for ${this.languageMapping(countryCode)}: ${this.status(countryCode)}`);
   }
 
   /**

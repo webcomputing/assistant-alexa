@@ -292,7 +292,7 @@ describe("AlexaDeployment", function() {
         describe("regarding model update", function() {
           it("returns a logging output for the current building status", async function(this: CurrentThisContext) {
             await this.alexaDeployment.execute(this.buildPath);
-            expect(console.log).toHaveBeenCalledWith("Amazon model building for de-DE: SUCCEEDED");
+            expect(console.log).toHaveBeenCalledWith("Amazon model training for de-DE: SUCCEEDED");
           });
 
           describe("regarding shell execution", function() {
