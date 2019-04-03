@@ -3,6 +3,7 @@ import { GenericIntent, PlatformGenerator } from "assistant-source";
 import * as fs from "fs";
 import { inject, injectable } from "inversify";
 import { Component, getMetaInjectionName } from "inversify-components";
+import * as path from "path";
 import { alexaInjectionNames } from "./injection-names";
 import { genericIntentToAmazon } from "./intent-dict";
 import { COMPONENT_NAME, Configuration } from "./private-interfaces";
@@ -12,34 +13,36 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
   constructor(@inject(getMetaInjectionName(COMPONENT_NAME)) private component: Component<Configuration.Runtime>) {}
 
   public execute(
-    language: string,
+    languages: string[],
     buildDir: string,
-    intentConfigurations: PlatformGenerator.IntentConfiguration[],
+    intentConfigurations: PlatformGenerator.Multilingual<PlatformGenerator.IntentConfiguration[]>,
     entityMapping: PlatformGenerator.EntityMapping,
-    customEntityMapping: PlatformGenerator.CustomEntityMapping
+    customEntityMapping: PlatformGenerator.Multilingual<PlatformGenerator.CustomEntityMapping>
   ) {
-    const currentBuildDir = buildDir + "/alexa";
-
     console.log("================= PROCESSING ON ALEXA =================");
-    console.log("Intents: #" + intentConfigurations.length + ", language: " + language);
+    const currentBuildDir = path.join(buildDir, "alexa");
 
-    console.log("validating...");
-    const convertedIntents = this.prepareConfiguration(intentConfigurations);
-
-    console.log("building entities (" + Object.keys(customEntityMapping).length + ")...");
-    const customEntities = this.buildCustomEntities(customEntityMapping);
-
-    console.log("building intent schema...");
-    const intentSchema = this.buildIntentSchema(convertedIntents, entityMapping, customEntityMapping);
-    const fullSchema = this.buildFullSchema(intentSchema, customEntities);
-
-    console.log("creating build directory: " + currentBuildDir);
+    console.log(`creating build directory: ${currentBuildDir}`);
     fs.mkdirSync(currentBuildDir);
 
-    console.log("writing to files...");
-    fs.writeFileSync(currentBuildDir + "/schema.json", JSON.stringify(fullSchema, null, 2));
+    languages.forEach(language => {
+      console.log(`Intents: #${intentConfigurations[language].length}, language: ${language}`);
 
-    console.log("=================      FINISHED.      =================");
+      console.log("validating...");
+      const convertedIntents = this.prepareConfiguration(intentConfigurations[language]);
+
+      console.log(`building entities (${Object.keys(customEntityMapping[language]).length})...`);
+      const customEntities = this.buildCustomEntities(customEntityMapping[language]);
+
+      console.log("building intent schema...");
+      const intentSchema = this.buildIntentSchema(convertedIntents, entityMapping, customEntityMapping[language]);
+      const fullSchema = this.buildFullSchema(intentSchema, customEntities);
+
+      console.log("writing to files...");
+      fs.writeFileSync(`${currentBuildDir}/schema_${language}.json`, JSON.stringify(fullSchema, null, 2));
+
+      console.log("=================      FINISHED.      =================");
+    });
   }
 
   /**
