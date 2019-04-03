@@ -23,26 +23,38 @@ export class AlexaDeployment implements CLIDeploymentExtension {
   public async execute(buildPath: string) {
     // tslint:disable-next-line:no-console
     console.log("===============     APIAI DEPLOYMENT     ===============");
-    // Reads all given languages from folder structure.
-    const countryCodes = fs.readdirSync(`${buildPath}`);
-    if (!countryCodes || countryCodes.length === 0) {
+
+    // Reads all names of given languages specific schema files.
+    const schemaFiles = fs.readdirSync(path.join(buildPath, "alexa"));
+
+    // Extract the country code from
+    const countryCodes = schemaFiles
+      .map(schemaFile => {
+        const schemaFileMatchTheLanguage = schemaFile.match(/schema_(..)\.json/);
+        return schemaFileMatchTheLanguage && schemaFileMatchTheLanguage[1] ? schemaFileMatchTheLanguage[1] : undefined;
+      })
+      .filter(countryCode => typeof countryCode !== "undefined") as string[];
+
+    if (countryCodes && countryCodes.length > 0) {
+      if (this.isAskInstalled()) {
+        await this.deploySkillSchema(buildPath, countryCodes);
+
+        await Promise.all(
+          countryCodes.map(countryCode => {
+            const currentLocale = this.languageMapping(countryCode);
+            this.exportModel(buildPath, currentLocale);
+            this.updateModel(buildPath, countryCode, currentLocale);
+
+            // Wait until the model upload is out of state in progress.
+            return this.whileModelTrainingIsInProgress(countryCode);
+          })
+        );
+
+        // tslint:disable-next-line:no-console
+        console.log("============        FINISHED.             ============");
+      }
+    } else {
       throw new Error("There is no configuration given: Please execute the 'assistant generator' before uploading the current configuration.");
-    }
-    if (this.isAskInstalled()) {
-      this.deploySkillSchema(buildPath, countryCodes);
-
-      await Promise.all(
-        countryCodes.map(async countryCode => {
-          const currentLocale = this.languageMapping(countryCode);
-          await this.exportModel(buildPath, currentLocale);
-          await this.updateModel(buildPath, countryCode, currentLocale);
-
-          // Wait until the model upload is out of state in progress.
-          await this.whileModelTrainingIsInProgress(countryCode);
-        })
-      );
-      // tslint:disable-next-line:no-console
-      console.log("============        FINISHED.             ============");
     }
     return;
   }
@@ -52,16 +64,24 @@ export class AlexaDeployment implements CLIDeploymentExtension {
    * @param locale locale of the model definition like 'de-DE' or 'en-GB'
    * @returns skill model
    */
-  private async getModel(locale: string) {
-    const modelSchema = execSync(`ask api get-model -s ${this.componentMeta.configuration.applicationID} -l ${locale}`);
-    return JSON.parse(modelSchema.toString());
+  private getModel(locale: string) {
+    try {
+      const modelSchema = execSync(`ask api get-model -s ${this.componentMeta.configuration.applicationID} -l ${locale}`);
+      return JSON.parse(modelSchema.toString());
+    } catch (error) {
+      return {};
+    }
   }
 
-  private async updateModel(buildPath: string, countryCode: string, locale: string) {
+  private updateModel(buildPath: string, countryCode: string, locale: string) {
     try {
       // Execute the ask update model command. e.g. 'ask api update-model -s schema.json -l de-DE'
       const updateModelExecution = execSync(
-        `ask api update-model -s ${this.componentMeta.configuration.applicationID} -f ${path.join(buildPath, countryCode, "alexa", "schema.json")} -l ${locale}`
+        `ask api update-model -s ${this.componentMeta.configuration.applicationID} -f ${path.join(
+          buildPath,
+          "alexa",
+          `schema_${countryCode}.json`
+        )} -l ${locale}`
       );
 
       /**
@@ -90,11 +110,13 @@ export class AlexaDeployment implements CLIDeploymentExtension {
    * @param locale LCID Code
    */
   private async exportModel(buildPath: string, locale: string) {
-    const model = await this.getModel(locale);
+    const model = this.getModel(locale);
+
     try {
       fs.writeFileSync(path.join(buildPath, "deployments", "alexa", `schema_${locale}.json`), JSON.stringify(model, null, 2));
     } catch (error) {
-      this.logger.error(error);
+      // tslint:disable-next-line:no-console
+      console.error(error);
     }
   }
 
@@ -134,9 +156,11 @@ export class AlexaDeployment implements CLIDeploymentExtension {
    */
   private async whileModelTrainingIsInProgress(countryCode: string) {
     const startTime: number = Date.now();
-    const untilStateInProgress = new Promise((resolve, reject) => {
+
+    const untilStateInProgress = await new Promise((resolve, reject) => {
       const interval = setInterval(() => {
         const state = this.status(countryCode);
+
         if (state !== "IN_PROGRESS") {
           this.logModelBuildStatus(countryCode);
           // Clear setInterval and reduce memory use
@@ -148,7 +172,9 @@ export class AlexaDeployment implements CLIDeploymentExtension {
         // If a timeout of 2 minutes will reach, the Promise will be rejected and the interval will be cleared
         if (Date.now() - startTime > 120000) {
           clearInterval(interval);
-          reject("Model building runs in a timeout exception.");
+          // tslint:disable-next-line:no-console
+          console.log("Model training runs in a timeout exception.");
+          reject("Model training runs in a timeout exception.");
         }
       }, 1000);
     });
@@ -244,9 +270,7 @@ export class AlexaDeployment implements CLIDeploymentExtension {
             },
           };
         })
-        .reduce((previousValue, currentValue) => {
-          return { ...previousValue, ...currentValue };
-        });
+        .reduce((previousValue, currentValue) => ({ ...previousValue, ...currentValue }), {});
     }
     return localesDefinitions;
   }
@@ -261,15 +285,11 @@ export class AlexaDeployment implements CLIDeploymentExtension {
     fs.writeFileSync(path.join(buildPath, "deployments", "alexa", "skill.json"), JSON.stringify(skillSchema, null, 2));
 
     const updateSkillResult = execSync(
-      `ask api update-skill -s ${this.componentMeta.configuration.applicationID} -f ${buildPath}/deployments/alexa/skill.json`
+      `ask api update-skill -s ${this.componentMeta.configuration.applicationID} -f ${path.join(buildPath, "deployments", "alexa", "skill.json")}`
     );
     // tslint:disable-next-line:no-console
     console.log("##############################################################################################");
     // tslint:disable-next-line:no-console
-    console.log(execSync);
-
-    console.log("updateSkillResult");
-
     console.log(updateSkillResult.toString());
     // tslint:disable-next-line:no-console
     console.log("##############################################################################################");

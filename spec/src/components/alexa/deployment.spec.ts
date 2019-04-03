@@ -2,6 +2,7 @@ import { injectionNames, Logger } from "assistant-source";
 import { execSync } from "child_process";
 import * as fs from "fs";
 import { Component, getMetaInjectionName } from "inversify-components";
+import * as path from "path";
 import { AlexaDeployment } from "../../../../src/components/alexa/deployment";
 import { COMPONENT_NAME, Configuration } from "../../../../src/components/alexa/private-interfaces";
 import { ThisContext } from "../../../support/this-context";
@@ -25,6 +26,8 @@ interface CurrentThisContext extends ThisContext {
 
 const { readdirSync, mkdirSync, writeFileSync, existsSync, readFileSync } = fs;
 const { error, log } = console;
+const setIntervalFunction = setInterval;
+const clearIntervalFunction = clearInterval;
 
 describe("AlexaDeployment", function() {
   afterEach(async function(this: CurrentThisContext) {
@@ -37,6 +40,9 @@ describe("AlexaDeployment", function() {
 
     (console as any).error = error;
     (console as any).log = log;
+
+    (setInterval as any) = setIntervalFunction;
+    (clearInterval as any) = clearIntervalFunction;
   });
 
   beforeEach(async function(this: CurrentThisContext) {
@@ -57,7 +63,7 @@ describe("AlexaDeployment", function() {
 
     /** Disable disk IO. */
     (fs as any).writeFileSync = jasmine.createSpy("writeFileSync");
-    (fs as any).readdirSync = jasmine.createSpy("readdirSync").and.returnValues(["de"]);
+    (fs as any).readdirSync = jasmine.createSpy("readdirSync").and.returnValues(["schema_de.json"]);
     (fs as any).mkdirSync = jasmine.createSpy("mkdirSync").and.callFake((...args) => {});
     (fs as any).existsSync = jasmine.createSpy("existsSync").and.callFake((...args) => {});
     (fs as any).readFileSync = jasmine.createSpy("readFileSync").and.callFake((...args) => {
@@ -71,6 +77,7 @@ describe("AlexaDeployment", function() {
       getSkillStatus: Buffer.from(JSON.stringify({ interactionModel: { "de-DE": { lastUpdateRequest: { status: "SUCCEEDED" } } } })),
       getModel: Buffer.from(JSON.stringify({})),
       getSkill: Buffer.from(JSON.stringify(this.skillSchema)),
+      updateSkill: Buffer.from(JSON.stringify({})),
     };
 
     /** Disable process execution and adds spy object. */
@@ -89,6 +96,9 @@ describe("AlexaDeployment", function() {
       }
       if (command.includes("ask api get-skill ")) {
         return this.spyReturns.execSync.getSkill;
+      }
+      if (command.includes("ask api update-skill")) {
+        return this.spyReturns.execSync.updateSkill;
       }
     });
 
@@ -133,7 +143,7 @@ describe("AlexaDeployment", function() {
       it("reads all country codes from folder structure", async function(this: CurrentThisContext) {
         await this.alexaDeployment.execute(this.buildPath);
         // The build path should includes a folder for each language, like en or de
-        expect(fs.readdirSync).toHaveBeenCalledWith(this.buildPath);
+        expect(fs.readdirSync).toHaveBeenCalledWith(path.join(this.buildPath, "alexa"));
       });
 
       describe("regarding ask-cli", function() {
@@ -292,7 +302,7 @@ describe("AlexaDeployment", function() {
 
             it("executes ask api model update command", async function(this: CurrentThisContext) {
               expect(execSync).toHaveBeenCalledWith(
-                `ask api update-model -s ${this.componentMeta.configuration.applicationID} -f ${this.buildPath}/de/alexa/schema.json -l de-DE`
+                `ask api update-model -s ${this.componentMeta.configuration.applicationID} -f ${this.buildPath}/alexa/schema_de.json -l de-DE`
               );
             });
           });
@@ -374,7 +384,16 @@ describe("AlexaDeployment", function() {
               await this.alexaDeployment.execute(this.buildPath);
               fail("Should throw a timeout exception");
             } catch (error) {
-              expect(error).toEqual("Model building runs in a timeout exception.");
+              expect(error).toEqual("Model training runs in a timeout exception.");
+            }
+          });
+
+          it("pint a timeout exception to the console output", async function(this: CurrentThisContext) {
+            try {
+              await this.alexaDeployment.execute(this.buildPath);
+              fail("Should throw a timeout exception");
+            } catch (error) {
+              expect(console.log).toHaveBeenCalledWith("Model training runs in a timeout exception.");
             }
           });
 
