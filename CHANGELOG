@@ -1,3 +1,6 @@
+version 0.5.0
+- adds automatic Alexa deployment for 'assistant deploy'
+
 version 0.4.0
 - aligns AlexaSpecHelper with new spec helper interface from AssistantJS 0.4.0
 - new ResponseHandler for compatibility with AssistantJS 0.4.0
