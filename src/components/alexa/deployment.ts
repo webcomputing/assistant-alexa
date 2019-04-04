@@ -22,7 +22,7 @@ export class AlexaDeployment implements CLIDeploymentExtension {
    */
   public async execute(buildPath: string) {
     // tslint:disable-next-line:no-console
-    console.log("===============     APIAI DEPLOYMENT     ===============");
+    console.log("===============     ALEXA DEPLOYMENT     ===============");
 
     // Reads all names of given languages specific schema files.
     const schemaFiles = fs.readdirSync(path.join(buildPath, "alexa"));
