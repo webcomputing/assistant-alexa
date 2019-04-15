@@ -60,7 +60,8 @@ export class AlexaDeployment implements CLIDeploymentExtension {
   }
 
   /**
-   * Get the current deployed model schema from the 'alexa developer console'
+   * Get the current deployed model schema from the 'alexa developer console'.
+   * This model schema includes all configured intents, utterances and all other skill specific configurations.
    * @param locale locale of the model definition like 'de-DE' or 'en-GB'
    * @returns skill model
    */
@@ -73,6 +74,13 @@ export class AlexaDeployment implements CLIDeploymentExtension {
     }
   }
 
+  /**
+   * Update the skill specific model schema. This model schema includes all configured intents,
+   * utterances and all other skill specific configurations.
+   * @param buildPath Path to the current build folder
+   * @param countryCode code of the current country like 'de' or 'en'
+   * @param locale code of the current locale definition like 'de-DE' or 'en-GB'
+   */
   private updateModel(buildPath: string, countryCode: string, locale: string) {
     try {
       // Execute the ask update model command. e.g. 'ask api update-model -s schema.json -l de-DE'
@@ -105,7 +113,8 @@ export class AlexaDeployment implements CLIDeploymentExtension {
   }
 
   /**
-   * Export the currently deployed alexa model and store it to the given buildPath
+   * Export the currently deployed alexa model schema and store it to the given buildPath.
+   * This model schema includes all configured intents, utterances and all other skill specific configurations.
    * @param buildPath Path to the current build folder. like {root}/builds/123456789
    * @param locale LCID Code
    */
@@ -218,6 +227,7 @@ export class AlexaDeployment implements CLIDeploymentExtension {
 
   /**
    * Export the current skill configuration as a JSON file in the build directory.
+   * This skill schema includes all global configured skill settings like used languages or the fulfilment URL.
    * @param buildPath Path to the current build folder like 'builds/1550067893551'
    */
   private exportCurrentSkillSchema(buildPath: string) {
@@ -232,7 +242,8 @@ export class AlexaDeployment implements CLIDeploymentExtension {
   }
 
   /**
-   * Get the current alexa skill configuration from disk.
+   * Get the current alexa skill schema from disk.
+   * This skill schema includes all global configured skill settings like used languages or the fulfilment URL.
    * @param buildPath Path to the current build folder like 'builds/1550067893551'
    * @returns skill schema as @type {AlexaSkillSchema}
    */
@@ -245,7 +256,8 @@ export class AlexaDeployment implements CLIDeploymentExtension {
   }
 
   /**
-   * Generates the locales schema for the given country codes
+   * Generates the locales skill schema for the given country codes
+   * This skill schema includes all global configured skill settings like used languages or the fulfilment URL.
    * @param skillSchema @type {AlexaSkillSchema} witch should be updated
    * @param countryCodes Array of country codes like ["de", "en"]
    * @returns locales schema @type {AlexaSkillSchema["manifest"]["publishingInformation"]["locales"]}
@@ -276,7 +288,8 @@ export class AlexaDeployment implements CLIDeploymentExtension {
   }
 
   /**
-   * Update the alexa skill configuration.
+   * Update the alexa skill schema.
+   * This skill schema includes all global configured skill settings like used languages or the fulfilment URL.
    * @param buildPath Path to the current build folder like 'builds/1550067893551'
    * @param countryCodes Array of country codes like ["de", "en"]
    * @param skillSchema @type {AlexaSkillSchema} witch should be updated
@@ -299,6 +312,7 @@ export class AlexaDeployment implements CLIDeploymentExtension {
 
   /**
    * Deploy the skill schema if the current configured languages will not be match with the 'alexa developer console' configuration.
+   * This skill schema includes all global configured skill settings like used languages or the fulfilment URL.
    * @param buildPath Path to the current build folder like 'builds/1550067893551'
    * @param countryCodes Array of country codes like ["de", "en"]
    */
