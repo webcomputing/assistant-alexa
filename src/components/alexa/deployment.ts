@@ -28,27 +28,13 @@ export class AlexaDeployment implements CLIDeploymentExtension {
     const schemaFiles = fs.readdirSync(path.join(buildPath, "alexa"));
 
     // Extract the country code from
-    const countryCodes = schemaFiles
-      .map(schemaFile => {
-        const schemaFileMatchTheLanguage = schemaFile.match(/schema_(..)\.json/);
-        return schemaFileMatchTheLanguage && schemaFileMatchTheLanguage[1] ? schemaFileMatchTheLanguage[1] : undefined;
-      })
-      .filter(countryCode => typeof countryCode !== "undefined") as string[];
+    const countryCodes: string[] = this.getCountryCodes(schemaFiles);
 
     if (countryCodes && countryCodes.length > 0) {
       if (this.isAskInstalled()) {
         await this.deploySkillSchema(buildPath, countryCodes);
 
-        await Promise.all(
-          countryCodes.map(countryCode => {
-            const currentLocale = this.languageMapping(countryCode);
-            this.exportModel(buildPath, currentLocale);
-            this.updateModel(buildPath, countryCode, currentLocale);
-
-            // Wait until the model upload is out of state in progress.
-            return this.whileModelTrainingIsInProgress(countryCode);
-          })
-        );
+        await Promise.all(this.deployModelSchema(buildPath, countryCodes));
 
         // tslint:disable-next-line:no-console
         console.log("============        FINISHED.             ============");
@@ -57,6 +43,36 @@ export class AlexaDeployment implements CLIDeploymentExtension {
       throw new Error("There is no configuration given: Please execute the 'assistant generator' before uploading the current configuration.");
     }
     return;
+  }
+
+  /**
+   * Deploy the model schema for all country codes.
+   * This model schema includes all configured intents, utterances and all other skill specific configurations.
+   * @param buildPath Path to the current build folder
+   * @param countryCodes list of all configured country codes like ['de', 'en']
+   */
+  private deployModelSchema(buildPath: string, countryCodes: string[]) {
+    return countryCodes.map(countryCode => {
+      const currentLocale = this.languageMapping(countryCode);
+      this.exportModel(buildPath, currentLocale);
+      this.updateModel(buildPath, countryCode, currentLocale);
+
+      // Wait until the model upload is out of state in progress.
+      return this.whileModelTrainingIsInProgress(countryCode);
+    });
+  }
+
+  /**
+   * Extract all given country codes
+   * @param schemaFiles List of the path to all given schema files
+   */
+  private getCountryCodes(schemaFiles: string[]): string[] {
+    return schemaFiles
+      .map(schemaFile => {
+        const schemaFileMatchTheLanguage = schemaFile.match(/schema_(..)\.json/);
+        return schemaFileMatchTheLanguage && schemaFileMatchTheLanguage[1] ? schemaFileMatchTheLanguage[1] : undefined;
+      })
+      .filter(countryCode => typeof countryCode !== "undefined") as string[];
   }
 
   /**
@@ -178,17 +194,27 @@ export class AlexaDeployment implements CLIDeploymentExtension {
           resolve();
         }
 
-        // If a timeout of 2 minutes will reach, the Promise will be rejected and the interval will be cleared
-        if (Date.now() - startTime > 120000) {
-          clearInterval(interval);
-          // tslint:disable-next-line:no-console
-          console.log("Model training runs in a timeout exception.");
-          reject("Model training runs in a timeout exception.");
-        }
+        this.checkTimeout(startTime, interval, reject);
       }, 1000);
     });
 
     return untilStateInProgress;
+  }
+
+  /**
+   * Check if the setInterval runs in a timeout, stop the interval and reject the Promise
+   * @param startTime Timestamp of when the model training has been started
+   * @param interval Reference to the setInterval instance
+   * @param reject Promise reject callback
+   */
+  private checkTimeout(startTime: number, interval: NodeJS.Timeout, reject: (reason: string) => void) {
+    // If a timeout of 2 minutes will reach, the Promise will be rejected and the interval will be cleared
+    if (Date.now() - startTime > 120000) {
+      clearInterval(interval);
+      // tslint:disable-next-line:no-console
+      console.log("Model training runs in a timeout exception.");
+      reject("Model training runs in a timeout exception.");
+    }
   }
 
   /**
