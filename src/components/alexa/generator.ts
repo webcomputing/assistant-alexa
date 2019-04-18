@@ -26,6 +26,7 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
     fs.mkdirSync(currentBuildDir);
 
     languages.forEach(language => {
+      console.log(`=================      ${language}      =================`);
       console.log(`Intents: #${intentConfigurations[language].length}, language: ${language}`);
 
       console.log("validating...");
@@ -40,9 +41,8 @@ export class AlexaGenerator implements PlatformGenerator.Extension {
 
       console.log("writing to files...");
       fs.writeFileSync(`${currentBuildDir}/schema_${language}.json`, JSON.stringify(fullSchema, null, 2));
-
-      console.log("=================      FINISHED.      =================");
     });
+    console.log("=================      FINISHED.      =================");
   }
 
   /**

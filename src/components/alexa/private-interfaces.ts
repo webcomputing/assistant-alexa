@@ -24,5 +24,22 @@ export namespace Configuration {
   export interface Runtime extends Defaults, Required {}
 }
 
+/** Schema from the alexa skill export */
+export interface AlexaSkillSchema {
+  manifest: {
+    apis: {
+      custom: {
+        interfaces: any[];
+      };
+    };
+    manifestVersion: string;
+    publishingInformation: {
+      locales: {
+        [locale: string]: { name: string };
+      };
+    };
+  };
+}
+
 /** Name of current component */
 export const COMPONENT_NAME = "alexa";
